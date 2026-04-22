@@ -1,6 +1,9 @@
 ---
 name: agent-brain
 description: Self-improvement system for agents. Invoke when the user runs /agent-brain followed by: improve (learn from this session), learn <something> (teach the agent something new), absorb <path> (compare with another agent/skill and adopt capabilities), or dream (reflect on the full brain and surface growth opportunities).
+metadata:
+  author: renenel
+  version: "1.0.0"
 ---
 
 # agent-brain
