@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>agent-brain — Agents that remember. Agents that grow.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #1c1c1a;
+  --bg-panel: #242422;
+  --bg-dark: #141412;
+  --bg-darker: #0e0e0c;
+  --text: #e2e2de;
+  --text-muted: #8a8a86;
+  --text-faint: #5a5a56;
+  --text-on-dark: #e2e2de;
+  --lime: #9bec00;
+  --lime-dim: #7bc900;
+  --lime-glow: rgba(155, 236, 0, 0.25);
+  --lime-subtle: rgba(155, 236, 0, 0.07);
+  --border: #2e2e2c;
+  --border-dark: #222220;
+  --radius: 4px;
+  --mono: 'IBM Plex Mono', monospace;
+  --serif: 'Playfair Display', Georgia, serif;
+  --sans: 'DM Sans', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* ── CURSOR ── */
+.cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--lime);
+  vertical-align: text-bottom;
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 48px;
+  background: rgba(28, 28, 26, 0.88);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  text-decoration: none;
+  display: flex; align-items: center; gap: 8px;
+}
+.nav-logo .dot {
+  width: 8px; height: 8px;
+  background: var(--lime);
+  border-radius: 50%;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 var(--lime-glow); }
+  50% { transform: scale(1.4); box-shadow: 0 0 0 8px transparent; }
+}
+.nav-links { display: flex; gap: 32px; align-items: center; }
+.nav-links a {
+  font-family: var(--mono); font-size: 12px; font-weight: 500;
+  color: var(--text-muted); text-decoration: none; letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--text); }
+.nav-cta {
+  font-family: var(--mono); font-size: 12px; font-weight: 700;
+  background: var(--lime); color: #0e0e0c;
+  padding: 8px 16px; border-radius: var(--radius);
+  text-decoration: none; letter-spacing: 0.05em;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.nav-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 20px var(--lime-glow); }
+
+/* ── HERO ── */
+#hero {
+  min-height: 100vh;
+  display: grid; grid-template-columns: 1fr 1fr;
+  padding-top: 80px;
+  position: relative; overflow: hidden;
+}
+.hero-left {
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 80px 48px 80px 80px;
+  position: relative; z-index: 2;
+}
+.hero-tag {
+  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--lime-dim);
+  background: var(--lime-subtle);
+  border: 1px solid rgba(155, 236, 0, 0.2);
+  padding: 6px 12px; border-radius: 2px;
+  display: inline-block; margin-bottom: 40px;
+  animation: fadeUp 0.6s ease both;
+}
+.hero-h1 {
+  font-family: var(--serif);
+  font-size: clamp(42px, 5.5vw, 72px);
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+  animation: fadeUp-hard 0.9s 0.15s cubic-bezier(0.16,1,0.3,1) both;
+}
+.hero-h1 em {
+  font-style: italic;
+  color: var(--lime-dim);
+}
+.hero-sub {
+  font-size: 17px; font-weight: 300; color: var(--text-muted);
+  max-width: 420px; line-height: 1.7; margin-bottom: 48px;
+  animation: fadeUp 0.6s 0.2s ease both;
+}
+.hero-actions {
+  display: flex; gap: 16px; align-items: center;
+  animation: fadeUp 0.6s 0.3s ease both;
+}
+.btn-primary {
+  font-family: var(--mono); font-size: 13px; font-weight: 700;
+  background: var(--lime); color: #0e0e0c;
+  padding: 14px 28px; border-radius: var(--radius);
+  text-decoration: none; letter-spacing: 0.04em;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: transform 0.15s, box-shadow 0.15s;
+  border: none; cursor: pointer;
+}
+.btn-primary {
+  position: relative; overflow: hidden;
+}
+.btn-primary::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.25) 50%, transparent 60%);
+  background-size: 200% 100%;
+  animation: shimmer 2.4s ease-in-out infinite;
+}
+.btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 40px var(--lime-glow); }
+[href="agent-brain.zip"] { animation: btn-breathe 2.5s ease-in-out infinite; }
+.btn-secondary {
+  font-family: var(--mono); font-size: 13px; font-weight: 400;
+  color: var(--text-muted); text-decoration: none;
+  display: inline-flex; align-items: center; gap: 6px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 2px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.btn-secondary:hover { color: var(--text); border-color: var(--text); }
+
+.hero-right {
+  display: flex; align-items: center; justify-content: center;
+  padding: 80px 80px 80px 0;
+  position: relative;
+}
+
+/* ── NEURAL CANVAS ── */
+#neural-canvas {
+  position: absolute; inset: 0; z-index: 0;
+  opacity: 0.35;
+}
+
+/* ── BRAIN VISUAL ── */
+.brain-visual {
+  position: relative; width: 420px; height: 420px; z-index: 2;
+  animation: fadeUp 0.8s 0.4s ease both;
+}
+.brain-center {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 120px; height: 120px;
+  background: var(--bg-dark);
+  border-radius: 50%;
+  border: 2px solid rgba(155,236,0,0.4);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 5;
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+.brain-center-inner {
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  color: var(--lime); text-align: center; letter-spacing: 0.08em;
+  line-height: 1.6;
+}
+.orbit {
+  position: absolute; top: 50%; left: 50%; border-radius: 50%;
+  border: 1px solid var(--border);
+  transform: translate(-50%, -50%);
+  animation: spin linear infinite;
+}
+.orbit-1 { width: 200px; height: 200px; animation-duration: 16s; border-color: rgba(155,236,0,0.25); }
+.orbit-2 { width: 290px; height: 290px; animation-duration: 28s; animation-direction: reverse; border-color: rgba(155,236,0,0.1); }
+.orbit-3 { width: 380px; height: 380px; animation-duration: 42s; border-color: rgba(155,236,0,0.06); }
+@keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+/* ── NODE WRAPS: absolutely placed in brain-visual, centered on orbit ── */
+.tooltip-wrap {
+  position: absolute !important;
+  display: block !important;
+  width: 72px; height: 72px;
+}
+/* orbit radius 130px from center (210,210), node size 72px so offset by 36px */
+.tooltip-wrap.tw-improve { top: 44px;  left: 174px; animation: float-node-up 3.8s ease-in-out infinite; }
+.tooltip-wrap.tw-learn   { top: 174px; left: 304px; animation: float-node-right 4.4s ease-in-out 0.9s infinite; }
+.tooltip-wrap.tw-absorb  { top: 304px; left: 174px; animation: float-node-down 3.5s ease-in-out 1.8s infinite; }
+.tooltip-wrap.tw-dream   { top: 174px; left: 44px;  animation: float-node-left 4.1s ease-in-out 0.4s infinite; }
+
+@keyframes float-node-up    { 0%,100%{transform:translateY(0)}   50%{transform:translateY(-14px)} }
+@keyframes float-node-right { 0%,100%{transform:translateX(0)}   50%{transform:translateX(14px)} }
+@keyframes float-node-down  { 0%,100%{transform:translateY(0)}   50%{transform:translateY(14px)} }
+@keyframes float-node-left  { 0%,100%{transform:translateX(0)}   50%{transform:translateX(-14px)} }
+
+@keyframes node-glow-cycle {
+  0%,100% { border-color: var(--border); box-shadow: none; }
+  50%      { border-color: var(--lime); box-shadow: 0 0 20px var(--lime-glow); }
+}
+
+.mode-node {
+  width: 72px; height: 72px;
+  background: var(--bg-panel);
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  cursor: pointer;
+  transition: background 0.25s, border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+  text-decoration: none;
+  animation: node-glow-cycle 4s ease-in-out infinite;
+}
+.tw-improve .mode-node { animation-delay: 0s; }
+.tw-learn   .mode-node { animation-delay: 1s; }
+.tw-absorb  .mode-node { animation-delay: 2s; }
+.tw-dream   .mode-node { animation-delay: 3s; }
+.mode-node:hover {
+  background: var(--bg-darker);
+  border-color: var(--lime);
+  box-shadow: 0 0 32px var(--lime-glow), 0 0 64px rgba(155,236,0,0.1);
+  transform: scale(1.18);
+  animation: none;
+}
+.mode-node .node-icon { font-size: 18px; }
+.mode-node .node-label {
+  font-family: var(--mono); font-size: 8px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);
+}
+.mode-node:hover .node-label { color: var(--lime); }
+
+/* ── STATS BAR ── */
+.stats-bar {
+  background: var(--bg-darker);
+  padding: 28px 80px;
+  display: flex; gap: 0; border-top: 1px solid var(--border-dark);
+}
+.stat {
+  flex: 1; padding: 0 40px; border-right: 1px solid var(--border-dark);
+}
+.stat:first-child { padding-left: 0; }
+.stat:last-child { border-right: none; }
+.stat-num {
+  font-family: var(--mono); font-size: 32px; font-weight: 600;
+  color: var(--lime); display: block; line-height: 1;
+}
+.stat-label {
+  font-size: 12px; color: var(--text-faint); margin-top: 6px;
+  font-family: var(--mono); letter-spacing: 0.04em;
+}
+
+/* ── SECTION BASE ── */
+section { padding: 120px 80px; }
+.section-tag {
+  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--lime-dim); margin-bottom: 20px; display: block;
+}
+.section-h2 {
+  font-family: var(--serif); font-size: clamp(32px, 4vw, 52px);
+  font-weight: 900; line-height: 1.1; letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+.section-sub {
+  font-size: 17px; font-weight: 300; color: var(--text-muted);
+  max-width: 560px; line-height: 1.7;
+}
+
+/* ── HOW IT WORKS ── */
+#how {
+  background: var(--bg-darker);
+  color: var(--text-on-dark);
+  padding: 120px 80px;
+}
+#how .section-h2 { color: var(--text-on-dark); }
+#how .section-sub { color: var(--text-muted); }
+
+.flow-diagram {
+  margin-top: 80px;
+  display: flex; align-items: flex-start; gap: 0;
+  position: relative;
+}
+.flow-step {
+  flex: 1; padding: 36px 32px;
+  background: var(--bg-darker);
+  border: 1px solid var(--border-dark);
+  border-right: none;
+  position: relative;
+  transition: background 0.25s, transform 0.25s, box-shadow 0.25s;
+  cursor: default;
+}
+.flow-step:last-child { border-right: 1px solid var(--border-dark); }
+.flow-step:hover {
+  background: #252523;
+  transform: translateY(-6px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(155,236,0,0.15);
+  z-index: 2;
+}
+.flow-step:hover .flow-arrow { color: var(--lime); }
+.flow-step:hover .flow-num { color: var(--lime); }
+
+.flow-num {
+  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  color: var(--lime); letter-spacing: 0.1em; margin-bottom: 20px;
+  display: block;
+}
+.flow-title {
+  font-family: var(--mono); font-size: 14px; font-weight: 600;
+  color: var(--text-on-dark); margin-bottom: 12px;
+}
+.flow-body {
+  font-size: 13px; color: #7a7a78; line-height: 1.65;
+}
+.flow-arrow {
+  position: absolute; right: -14px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px; color: var(--border-dark);
+  z-index: 5; transition: color 0.2s;
+  pointer-events: none;
+}
+.flow-tag {
+  display: inline-block; margin-top: 16px;
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  padding: 4px 8px; border-radius: 2px;
+  background: rgba(155,236,0,0.1); color: var(--lime);
+  border: 1px solid rgba(155,236,0,0.2);
+}
+
+/* ── MODES ── */
+#modes { padding: 120px 80px; }
+
+.modes-header {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: end;
+  margin-bottom: 64px;
+}
+.modes-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+}
+.mode-card {
+  color: inherit;
+  text-decoration: none;
+  background: var(--bg-panel);
+  padding: 48px 44px;
+  transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative; overflow: hidden;
+  border: 1px solid var(--border);
+}
+.mode-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--lime-subtle), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.mode-card:hover {
+  background: var(--bg-dark);
+  border-color: rgba(155,236,0,0.4);
+  transform: translateY(-8px) scale(1.01);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(155,236,0,0.2);
+}
+.mode-card:hover::before { opacity: 1; }
+.mode-card:hover .mode-card-cmd { color: var(--lime); }
+.mode-card:hover .mode-card-title { color: var(--text-on-dark); }
+.mode-card:hover .mode-card-body { color: #8a8a88; }
+.mode-card:hover .mode-card-arrow { transform: translate(4px, -4px); }
+
+.mode-card-cmd {
+  font-family: var(--mono); font-size: 12px; font-weight: 500;
+  color: var(--text-faint); letter-spacing: 0.06em;
+  margin-bottom: 24px; display: flex; align-items: center; gap: 8px;
+  transition: color 0.2s;
+}
+.mode-card-cmd::before { content: '/'; color: var(--lime); font-weight: 700; }
+.mode-card-title {
+  font-family: var(--serif); font-size: 28px; font-weight: 900;
+  line-height: 1.1; margin-bottom: 16px; transition: color 0.2s;
+}
+.mode-card-body {
+  font-size: 14px; color: var(--text-muted); line-height: 1.65;
+  transition: color 0.2s;
+}
+.mode-card-arrow {
+  position: absolute; bottom: 32px; right: 36px;
+  font-size: 20px; color: var(--text-faint);
+  transition: transform 0.2s, color 0.2s;
+}
+.mode-card:hover .mode-card-arrow { color: var(--lime); }
+
+/* ── TERMINAL ── */
+#terminal-section {
+  background: var(--bg-darker);
+  padding: 120px 80px;
+}
+.terminal-wrapper {
+  display: grid; grid-template-columns: 1fr 1.2fr; gap: 64px; align-items: start;
+}
+.terminal-modes {
+  display: flex; flex-direction: column; gap: 4px;
+  margin-top: 56px;
+}
+.t-mode-btn {
+  font-family: var(--mono); font-size: 12px; font-weight: 500;
+  padding: 14px 20px; border-radius: var(--radius);
+  border: 1px solid var(--border-dark);
+  background: transparent; color: #7a7a78;
+  cursor: pointer; text-align: left;
+  display: flex; align-items: center; gap: 10px;
+  transition: all 0.2s;
+  letter-spacing: 0.04em;
+}
+.t-mode-btn .t-prefix { color: var(--lime); font-weight: 700; }
+.t-mode-btn:hover { background: #252523; color: var(--text-on-dark); border-color: rgba(155,236,0,0.25); }
+.t-mode-btn.active {
+  background: rgba(155,236,0,0.08);
+  border-color: rgba(155,236,0,0.4);
+  color: var(--lime);
+}
+
+.terminal-box {
+  background: var(--bg-darker);
+  border: 1px solid var(--border-dark);
+  border-radius: 8px; overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.4);
+}
+.terminal-titlebar {
+  padding: 14px 20px;
+  background: #111110;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid var(--border-dark);
+}
+.t-dot { width: 12px; height: 12px; border-radius: 50%; }
+.t-dot.red { background: #ff5f57; }
+.t-dot.yellow { background: #febc2e; }
+.t-dot.green { background: #28c840; }
+.terminal-title {
+  font-family: var(--mono); font-size: 11px; color: #4a4a48;
+  margin-left: 8px; letter-spacing: 0.06em;
+}
+.terminal-body {
+  padding: 28px 28px 36px;
+  min-height: 320px;
+  font-family: var(--mono); font-size: 13px; line-height: 1.8;
+}
+.t-prompt { color: var(--lime); }
+.t-cmd { color: var(--text-on-dark); }
+.t-output { color: #7a7a78; }
+.t-highlight { color: var(--lime); }
+.t-warning { color: #f59e0b; }
+.t-section { color: #9a9a98; font-weight: 600; margin-top: 8px; display: block; }
+.t-item { color: #6a6a68; }
+.t-item::before { content: '  '; }
+.t-arrow { color: var(--lime); }
+
+/* ── PARA ── */
+#para { padding: 120px 80px; }
+.para-grid {
+  margin-top: 80px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px;
+}
+.para-card {
+  padding: 44px 36px; position: relative; overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  transition: all 0.25s;
+  cursor: default;
+}
+.para-card::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 3px; background: var(--lime);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.3s ease;
+}
+.para-card:hover::after { transform: scaleX(1); }
+.para-card:hover {
+  background: #2a2a28;
+  transform: translateY(-6px);
+  box-shadow: 0 20px 48px rgba(0,0,0,0.4);
+}
+.para-card {
+  transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+.para-letter {
+  font-family: var(--serif); font-size: 72px; font-weight: 900;
+  line-height: 1; color: var(--border);
+  position: absolute; top: 16px; right: 20px;
+  transition: color 0.25s;
+}
+.para-card:hover .para-letter { color: rgba(155,236,0,0.15); }
+.para-label {
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--lime-dim); margin-bottom: 16px; display: block;
+}
+.para-title {
+  font-family: var(--serif); font-size: 22px; font-weight: 900;
+  margin-bottom: 12px;
+}
+.para-body { font-size: 13px; color: var(--text-muted); line-height: 1.65; }
+
+/* ── QUOTE ── */
+#quote {
+  padding: 120px 80px;
+  background: var(--bg-darker);
+  text-align: center;
+}
+.quote-mark {
+  font-family: var(--serif); font-size: 120px; font-weight: 900;
+  color: var(--lime); line-height: 0.6; display: block;
+  margin-bottom: 48px;
+}
+.quote-text {
+  font-family: var(--serif); font-size: clamp(28px, 3.5vw, 44px);
+  font-weight: 400; font-style: italic;
+  color: var(--text-on-dark); line-height: 1.4;
+  max-width: 820px; margin: 0 auto 48px;
+}
+.quote-text em { color: var(--lime); font-style: normal; font-weight: 700; }
+.quote-attr {
+  font-family: var(--mono); font-size: 12px; color: #5a5a58;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+
+/* ── CTA ── */
+#cta { padding: 160px 80px; text-align: center; position: relative; overflow: hidden; }
+#cta::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 40% at 50% 50%, rgba(155,236,0,0.06), transparent);
+}
+.cta-eyebrow {
+  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-faint); margin-bottom: 32px; display: block;
+}
+.cta-h2 {
+  font-family: var(--serif); font-size: clamp(40px, 6vw, 80px);
+  font-weight: 900; line-height: 1.0; letter-spacing: -0.03em;
+  margin-bottom: 40px;
+}
+.cta-h2 em { font-style: italic; color: var(--lime-dim); }
+.cta-install {
+  display: inline-flex; align-items: center; gap: 16px;
+  background: var(--bg-dark); border: 1px solid var(--border-dark);
+  padding: 18px 28px; border-radius: var(--radius);
+  margin: 0 auto 40px; cursor: pointer;
+  transition: all 0.2s;
+  position: relative; z-index: 1;
+  max-width: 90vw;
+}
+.cta-install:hover { border-color: rgba(155,236,0,0.5); box-shadow: 0 0 40px var(--lime-glow); }
+.cta-install-cmd {
+  font-family: var(--mono); font-size: 15px; color: var(--text-on-dark); font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cta-install-cmd .kw { color: var(--lime); }
+.cta-copy-btn {
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  color: var(--text-faint); background: transparent; border: 1px solid var(--border-dark);
+  padding: 4px 8px; border-radius: 2px; cursor: pointer;
+  transition: all 0.2s; letter-spacing: 0.05em; text-transform: uppercase;
+}
+.cta-copy-btn:hover { color: var(--lime); border-color: var(--lime); }
+.cta-footnote { font-size: 13px; color: var(--text-faint); }
+
+/* ── FOOTER ── */
+footer {
+  padding: 48px 80px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.footer-logo {
+  font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--text);
+}
+.footer-note { font-family: var(--mono); font-size: 11px; color: var(--text-faint); }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeUp-hard {
+  0%   { opacity: 0; transform: translateY(48px) scale(0.96); }
+  60%  { opacity: 1; transform: translateY(-6px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px var(--lime-glow), 0 0 60px rgba(155,236,0,0.08); }
+  50%       { box-shadow: 0 0 40px var(--lime-glow), 0 0 100px rgba(155,236,0,0.18); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes btn-breathe {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(155,236,0,0.4); }
+  50%       { box-shadow: 0 0 0 12px rgba(155,236,0,0); }
+}
+.reveal {
+  opacity: 0; transform: translateY(32px);
+  transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1);
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+
+/* ── TOOLTIP ── */
+.tooltip-wrap { position: relative; }
+.tooltip {
+  position: absolute; bottom: calc(100% + 8px); left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: var(--bg-dark); color: var(--lime);
+  font-family: var(--mono); font-size: 11px;
+  padding: 6px 10px; border-radius: 3px; white-space: nowrap;
+  pointer-events: none; opacity: 0;
+  transition: opacity 0.15s, transform 0.15s;
+  border: 1px solid rgba(155,236,0,0.3);
+  z-index: 50;
+}
+.tooltip-wrap:hover .tooltip { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── COPY FEEDBACK ── */
+.copied-flash {
+  position: fixed; bottom: 32px; right: 32px;
+  background: var(--bg-dark); border: 1px solid rgba(155,236,0,0.4);
+  color: var(--lime); font-family: var(--mono); font-size: 12px;
+  padding: 12px 20px; border-radius: var(--radius);
+  transform: translateY(80px); opacity: 0;
+  transition: all 0.3s ease; z-index: 9999;
+}
+.copied-flash.show { transform: translateY(0); opacity: 1; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 900px) {
+  #hero { grid-template-columns: 1fr; }
+  .hero-right { display: none; }
+  section, #how, #modes, #para, #quote, #cta, #terminal-section { padding: 80px 32px; }
+  nav { padding: 16px 24px; }
+  .nav-links { display: none; }
+  .stats-bar { padding: 28px 32px; flex-wrap: wrap; gap: 24px; }
+  .flow-diagram { flex-direction: column; }
+  .flow-arrow { display: none; }
+  .flow-step { border-right: 1px solid var(--border-dark); border-bottom: none; }
+  .modes-grid, .para-grid { grid-template-columns: 1fr; }
+  .modes-header { grid-template-columns: 1fr; gap: 32px; }
+  .terminal-wrapper { grid-template-columns: 1fr; }
+  footer { flex-direction: column; gap: 16px; text-align: center; }
+  .hero-left { padding: 80px 32px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <span class="dot"></span>
+    agent-brain
+  </a>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#modes">Modes</a>
+    <a href="#para">Architecture</a>
+  </div>
+  <a href="#cta" class="nav-cta">Get started →</a>
+</nav>
+
+<!-- NEURAL CANVAS -->
+<canvas id="neural-canvas"></canvas>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-left">
+    <span class="hero-tag">Claude Code · agent improvement system</span>
+    <h1 class="hero-h1">Your agents<br>get <em>older.</em><br>Not <em>better.</em></h1>
+    <p class="hero-sub">
+      Every other system adds memory on top of an agent that never changes. An agent that remembers your preferences is a tool. An agent that internalises them is a colleague.
+    </p>
+    <div class="hero-actions">
+      <a href="#cta" class="btn-primary">
+        Install now
+        <span>→</span>
+      </a>
+      <a href="#how" class="btn-secondary">
+        See how it works
+      </a>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="brain-visual">
+      <div class="orbit orbit-3"></div>
+      <div class="orbit orbit-2"></div>
+      <div class="orbit orbit-1"></div>
+
+      <div class="brain-center">
+        <div class="brain-center-inner">AGENT<br>BRAIN</div>
+      </div>
+
+      <div class="tooltip-wrap tw-improve">
+        <a href="#terminal-section" class="mode-node" onclick="selectMode('improve'); return false;">
+          <span class="node-icon">⚡</span>
+          <span class="node-label">improve</span>
+        </a>
+        <span class="tooltip">/agent-brain improve</span>
+      </div>
+
+      <div class="tooltip-wrap tw-learn">
+        <a href="#terminal-section" class="mode-node" onclick="selectMode('learn'); return false;">
+          <span class="node-icon">📥</span>
+          <span class="node-label">learn</span>
+        </a>
+        <span class="tooltip">/agent-brain learn</span>
+      </div>
+
+      <div class="tooltip-wrap tw-absorb">
+        <a href="#terminal-section" class="mode-node" onclick="selectMode('absorb'); return false;">
+          <span class="node-icon">🔗</span>
+          <span class="node-label">absorb</span>
+        </a>
+        <span class="tooltip">/agent-brain absorb</span>
+      </div>
+
+      <div class="tooltip-wrap tw-dream">
+        <a href="#terminal-section" class="mode-node" onclick="selectMode('dream'); return false;">
+          <span class="node-icon">✦</span>
+          <span class="node-label">dream</span>
+        </a>
+        <span class="tooltip">/agent-brain dream</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat">
+    <span class="stat-num" data-target="0">∞</span>
+    <span class="stat-label">cold starts after this</span>
+  </div>
+  <div class="stat">
+    <span class="stat-num" data-target="100" data-suffix="%">0%</span>
+    <span class="stat-label">human-in-the-loop</span>
+  </div>
+  <div class="stat">
+    <span class="stat-num" data-target="4">0</span>
+    <span class="stat-label">growth operations</span>
+  </div>
+  <div class="stat">
+    <span class="stat-num" data-target="1">0</span>
+    <span class="stat-label">skill file to install</span>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <span class="section-tag reveal">How it works</span>
+  <h2 class="section-h2 reveal">It rewrites the agent.<br>Not just its notes.</h2>
+  <p class="section-sub reveal">
+    Other systems bolt memory onto an unchanged agent. agent-brain goes deeper — it routes each lesson to either context (recall when needed) or definition (who the agent fundamentally is). High-signal learnings get promoted into the agent's core, permanently.
+  </p>
+
+  <div class="flow-diagram">
+    <div class="flow-step reveal">
+      <span class="flow-num">01</span>
+      <div class="flow-title">Signal detected</div>
+      <div class="flow-body">You corrected a pattern. The agent looped. A constraint was expressed. The session generates raw signal worth keeping.</div>
+      <span class="flow-tag">trigger</span>
+      <span class="flow-arrow">›</span>
+    </div>
+    <div class="flow-step reveal" style="transition-delay:0.1s">
+      <span class="flow-num">02</span>
+      <div class="flow-title">Router decides</div>
+      <div class="flow-body">Is this something to <em>recall</em>, or something to <em>become</em>? The router classifies each item by priority and destination. Noise is discarded.</div>
+      <span class="flow-tag">router.md</span>
+      <span class="flow-arrow">›</span>
+    </div>
+    <div class="flow-step reveal" style="transition-delay:0.2s">
+      <span class="flow-num">03</span>
+      <div class="flow-title">You review the diff</div>
+      <div class="flow-body">Every proposed change is shown to you before it's written. Approve, tweak, or skip. Nothing mutates without your sign-off.</div>
+      <span class="flow-tag">diff.md</span>
+      <span class="flow-arrow">›</span>
+    </div>
+    <div class="flow-step reveal" style="transition-delay:0.3s">
+      <span class="flow-num">04</span>
+      <div class="flow-title">Core gets rewritten</div>
+      <div class="flow-body">High-priority learnings are promoted directly into the agent's definition file — not a sticky note, not a lookup. The agent's identity changes.</div>
+      <span class="flow-tag">editor.md</span>
+      <span class="flow-arrow">›</span>
+    </div>
+    <div class="flow-step reveal" style="transition-delay:0.4s">
+      <span class="flow-num">05</span>
+      <div class="flow-title">Agent is different now</div>
+      <div class="flow-body">Next session, a genuinely better agent shows up. Not one that remembers more — one that <em>is</em> more. That's the gap we close.</div>
+      <span class="flow-tag">growth</span>
+    </div>
+  </div>
+</section>
+
+<!-- MODES -->
+<section id="modes">
+  <div class="modes-header">
+    <div>
+      <span class="section-tag reveal">Four modes</span>
+      <h2 class="section-h2 reveal">Four operations.<br>One direction: <em>better.</em></h2>
+    </div>
+    <p class="section-sub reveal" style="padding-top:48px">
+      Click any mode to see it in action. Each command is a different way to push the agent's core forward — from a single explicit lesson to a full self-audit that rewrites what the agent fundamentally is.
+    </p>
+  </div>
+
+  <div class="modes-grid">
+    <a href="#terminal-section" class="mode-card reveal" data-mode="improve" onclick="selectMode('improve'); return false;">
+      <div class="mode-card-cmd">agent-brain improve</div>
+      <h3 class="mode-card-title">Improve</h3>
+      <p class="mode-card-body">Run after any session. Reflects on corrections, loops, and interventions — then promotes the highest-signal learnings straight into the agent's definition.</p>
+      <span class="mode-card-arrow">↗</span>
+    </a>
+    <a href="#terminal-section" class="mode-card reveal" style="transition-delay:0.1s" data-mode="learn" onclick="selectMode('learn'); return false;">
+      <div class="mode-card-cmd">agent-brain learn &lt;something&gt;</div>
+      <h3 class="mode-card-title">Learn</h3>
+      <p class="mode-card-body">Explicitly push a lesson into the agent. The router decides whether it belongs in context or in core. Either way, it sticks — permanently.</p>
+      <span class="mode-card-arrow">↗</span>
+    </a>
+    <a href="#terminal-section" class="mode-card reveal" style="transition-delay:0.2s" data-mode="absorb" onclick="selectMode('absorb'); return false;">
+      <div class="mode-card-cmd">agent-brain absorb &lt;path&gt;</div>
+      <h3 class="mode-card-title">Absorb</h3>
+      <p class="mode-card-body">Point at another agent or skill. It maps what it doesn't already know, surfaces conflicts, and selectively integrates the delta into its own definition.</p>
+      <span class="mode-card-arrow">↗</span>
+    </a>
+    <a href="#terminal-section" class="mode-card reveal" style="transition-delay:0.3s" data-mode="dream" onclick="selectMode('dream'); return false;">
+      <div class="mode-card-cmd">agent-brain dream</div>
+      <h3 class="mode-card-title">Dream</h3>
+      <p class="mode-card-body">A full self-audit. Surfaces stale context, gaps in the definition, and patterns worth promoting to core. Leaves the agent leaner and sharper than it found it.</p>
+      <span class="mode-card-arrow">↗</span>
+    </a>
+  </div>
+</section>
+
+<!-- TERMINAL DEMO -->
+<section id="terminal-section">
+  <div class="terminal-wrapper">
+    <div>
+      <span class="section-tag" style="color:#5a5a58">Live demo</span>
+      <h2 class="section-h2 reveal" style="color:var(--text-on-dark)">See it in<br>your terminal.</h2>
+      <p class="reveal" style="font-size:15px;color:#6a6a68;line-height:1.7;margin-bottom:40px;max-width:360px">
+        Pick a mode and watch agent-brain work. Everything you see is what actually runs.
+      </p>
+      <div class="terminal-modes">
+        <button class="t-mode-btn active" onclick="selectMode('improve')" id="btn-improve">
+          <span class="t-prefix">/</span>agent-brain improve
+        </button>
+        <button class="t-mode-btn" onclick="selectMode('learn')" id="btn-learn">
+          <span class="t-prefix">/</span>agent-brain learn
+        </button>
+        <button class="t-mode-btn" onclick="selectMode('absorb')" id="btn-absorb">
+          <span class="t-prefix">/</span>agent-brain absorb
+        </button>
+        <button class="t-mode-btn" onclick="selectMode('dream')" id="btn-dream">
+          <span class="t-prefix">/</span>agent-brain dream
+        </button>
+      </div>
+    </div>
+    <div>
+      <div class="terminal-box">
+        <div class="terminal-titlebar">
+          <span class="t-dot red"></span>
+          <span class="t-dot yellow"></span>
+          <span class="t-dot green"></span>
+          <span class="terminal-title">claude code — agent-brain</span>
+        </div>
+        <div class="terminal-body" id="terminal-output">
+          <!-- populated by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PARA SYSTEM -->
+<section id="para">
+  <span class="section-tag reveal">Storage architecture</span>
+  <h2 class="section-h2 reveal">Two tiers.<br>One direction.</h2>
+  <p class="section-sub reveal">
+    Learnings don't all belong in the same place. The PARA system separates what the agent <em>looks up</em> from what the agent <em>is</em> — and over time, the best context gets promoted into the core.
+  </p>
+
+  <div class="para-grid">
+    <div class="para-card reveal">
+      <span class="para-letter">P</span>
+      <span class="para-label">Active work</span>
+      <h3 class="para-title">Projects</h3>
+      <p class="para-body">Short-horizon work with a clear outcome. Closed projects move to Archives automatically.</p>
+    </div>
+    <div class="para-card reveal" style="transition-delay:0.1s">
+      <span class="para-letter">A</span>
+      <span class="para-label">Ongoing standards</span>
+      <h3 class="para-title">Areas</h3>
+      <p class="para-body">Responsibilities that persist over time. Coding standards, team conventions, agent identity traits.</p>
+    </div>
+    <div class="para-card reveal" style="transition-delay:0.2s">
+      <span class="para-letter">R</span>
+      <span class="para-label">Reference material</span>
+      <h3 class="para-title">Resources</h3>
+      <p class="para-body">Useful things to know but not act on. Domain knowledge, API docs, research notes.</p>
+    </div>
+    <div class="para-card reveal" style="transition-delay:0.3s">
+      <span class="para-letter">A</span>
+      <span class="para-label">Completed work</span>
+      <h3 class="para-title">Archives</h3>
+      <p class="para-body">Inactive items kept for reference. Past projects, superseded patterns, deprecated constraints.</p>
+    </div>
+  </div>
+</section>
+
+<!-- QUOTE -->
+<section id="quote">
+  <span class="quote-mark">"</span>
+  <blockquote class="quote-text">
+    Your agent doesn't need more to read.<br>It needs to <em>become different.</em>
+  </blockquote>
+  <span class="quote-attr">The gap agent-brain closes</span>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <span class="cta-eyebrow reveal">Open source. Any project.</span>
+  <h2 class="cta-h2 reveal">Start building<br><em>better agents.</em></h2>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:16px;position:relative;z-index:1">
+    <a href="https://github.com/renenel/agent-brain" target="_blank" rel="noopener" class="btn-primary" style="font-size:15px;padding:18px 36px;text-decoration:none">
+      View on GitHub
+      <span>↗</span>
+    </a>
+    <div class="cta-install reveal">
+      <div class="cta-install-cmd">
+        <span class="kw">git clone</span> git@github.com:renenel/agent-brain.git<br>
+        <span class="kw">cp</span> -r agent-brain .claude/skills/
+      </div>
+      <button class="cta-copy-btn" id="copy-btn" onclick="copyInstall()">copy</button>
+    </div>
+    <p class="cta-footnote">Clone → drop <code style="font-family:var(--mono);color:var(--lime)">agent-brain/</code> into <code style="font-family:var(--mono);color:var(--lime)">.claude/skills/</code> → invoke with <code style="font-family:var(--mono);color:var(--lime)">/agent-brain</code></p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="reveal">
+  <span class="footer-logo">agent-brain</span>
+  <span class="footer-note">Built for Claude Code · Agents that improve, not just remember · Human-in-the-loop by default</span>
+</footer>
+
+<!-- COPY FEEDBACK -->
+<div class="copied-flash" id="copied-flash">✓ Copied to clipboard</div>
+
+<script>
+// ── NEURAL NETWORK BACKGROUND ──
+const canvas = document.getElementById('neural-canvas');
+const ctx = canvas.getContext('2d');
+let nodes = [], W, H, raf;
+let mouse = { x: -999, y: -999 };
+
+window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+function resizeCanvas() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+
+function initNodes() {
+  nodes = [];
+  const count = Math.floor((W * H) / 14000);
+  for (let i = 0; i < count; i++) {
+    nodes.push({
+      x: Math.random() * W, y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.55,
+      vy: (Math.random() - 0.5) * 0.55,
+      r: Math.random() * 2.5 + 0.8,
+      pulse: Math.random() * Math.PI * 2
+    });
+  }
+}
+
+function drawNeural(t) {
+  ctx.clearRect(0, 0, W, H);
+  const lime = '155, 236, 0';
+
+  nodes.forEach(n => {
+    // mouse repulsion
+    const mdx = n.x - mouse.x, mdy = n.y - mouse.y;
+    const md = Math.sqrt(mdx*mdx + mdy*mdy);
+    if (md < 120) {
+      const force = (120 - md) / 120 * 0.6;
+      n.vx += (mdx / md) * force;
+      n.vy += (mdy / md) * force;
+    }
+    // dampen & move
+    n.vx *= 0.98; n.vy *= 0.98;
+    n.x += n.vx; n.y += n.vy; n.pulse += 0.025;
+    if (n.x < 0 || n.x > W) n.vx *= -1;
+    if (n.y < 0 || n.y > H) n.vy *= -1;
+
+    const near = md < 200;
+    const alpha = near ? 0.7 : 0.35 + 0.2 * Math.sin(n.pulse);
+    const r = near ? n.r * 1.4 : n.r;
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${lime},${alpha})`;
+    ctx.fill();
+  });
+
+  const maxDist = 160;
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dx = nodes[i].x - nodes[j].x;
+      const dy = nodes[i].y - nodes[j].y;
+      const d = Math.sqrt(dx*dx + dy*dy);
+      if (d < maxDist) {
+        const nearMouse = Math.min(
+          Math.hypot(nodes[i].x - mouse.x, nodes[i].y - mouse.y),
+          Math.hypot(nodes[j].x - mouse.x, nodes[j].y - mouse.y)
+        );
+        const boost = nearMouse < 180 ? 2.5 : 1;
+        const alpha = (1 - d/maxDist) * 0.18 * boost;
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.strokeStyle = `rgba(${lime},${Math.min(alpha, 0.5)})`;
+        ctx.lineWidth = nearMouse < 180 ? 1.2 : 0.8;
+        ctx.stroke();
+      }
+    }
+  }
+  raf = requestAnimationFrame(drawNeural);
+}
+
+resizeCanvas(); initNodes(); drawNeural();
+window.addEventListener('resize', () => { resizeCanvas(); initNodes(); });
+
+// ── TERMINAL ──
+const terminals = {
+  improve: [
+    { type: 'prompt', text: '> /agent-brain improve' },
+    { type: 'gap' },
+    { type: 'section', text: 'Gathering session evidence...' },
+    { type: 'output', text: '3 significant events found.' },
+    { type: 'gap' },
+    { type: 'section', text: 'Session learnings — 3 items' },
+    { type: 'gap' },
+    { type: 'highlight', text: 'Memory changes (2):' },
+    { type: 'item', text: '• [areas/testing/no-mocks.md] User corrected mock usage in integration tests (priority 4)' },
+    { type: 'item', text: '• [areas/comms/response-length.md] User asked for shorter responses twice (priority 3)' },
+    { type: 'gap' },
+    { type: 'highlight', text: 'Definition changes (1):' },
+    { type: 'item', text: '• [areas/core/review-before-commit.md] Always run tests → PROMOTE to definition' },
+    { type: 'gap' },
+    { type: 'output', text: 'Apply these changes? (y) Review each (r) Skip (n)' },
+    { type: 'prompt', text: '> y' },
+    { type: 'gap' },
+    { type: 'highlight', text: '✓ 3 changes applied.' },
+  ],
+  learn: [
+    { type: 'prompt', text: '> /agent-brain learn never use git push --force on main' },
+    { type: 'gap' },
+    { type: 'section', text: 'Routing decision:' },
+    { type: 'item', text: '  destination  →  areas' },
+    { type: 'item', text: '  priority     →  5 (promote to definition)' },
+    { type: 'item', text: '  para_subpath →  areas/git/force-push-policy.md' },
+    { type: 'gap' },
+    { type: 'section', text: 'Proposed change:' },
+    { type: 'item', text: '  ┌─ NEW FILE · .agent-brain/me/areas/git/force-push-policy.md' },
+    { type: 'item', text: '  │' },
+    { type: 'item', text: '  │ + # Force Push Policy' },
+    { type: 'item', text: '  │ + Never use git push --force on main.' },
+    { type: 'item', text: '  │' },
+    { type: 'item', text: '  └─ Safety constraint: destructive push blocked on protected branch.' },
+    { type: 'gap' },
+    { type: 'output', text: 'Apply these changes? (y) Review each (r) Skip (n)' },
+    { type: 'prompt', text: '> y' },
+    { type: 'highlight', text: '✓ Learned.' },
+  ],
+  absorb: [
+    { type: 'prompt', text: '> /agent-brain absorb .claude/agents/arch-lead.md' },
+    { type: 'gap' },
+    { type: 'section', text: 'Reading arch-lead.md...' },
+    { type: 'output', text: 'arch-lead has 5 capabilities you don\'t currently have:' },
+    { type: 'gap' },
+    { type: 'item', text: '  1. [SOLID principles]    — core engineering philosophy  [no conflict]' },
+    { type: 'item', text: '  2. [ADR format]          — writes architecture decisions  [no conflict]' },
+    { type: 'item', text: '  3. [Review checklist]    — 12-point PR review protocol  [no conflict]' },
+    { type: 'item', text: '  4. [Dependency policy]   — avoids new deps without sign-off  [⚠ conflicts: existing dep rule]' },
+    { type: 'item', text: '  5. [Naming conventions]  — file and function naming standard  [no conflict]' },
+    { type: 'gap' },
+    { type: 'output', text: 'Pick numbers to absorb, \'all\', or \'none\': ' },
+    { type: 'prompt', text: '> 1 2 3 5' },
+    { type: 'gap' },
+    { type: 'highlight', text: '✓ Absorbed 4 capabilities.' },
+  ],
+  dream: [
+    { type: 'prompt', text: '> /agent-brain dream' },
+    { type: 'gap' },
+    { type: 'section', text: 'Reading full brain...' },
+    { type: 'output', text: '14 files · 3,200 words · last dream: 14 days ago' },
+    { type: 'gap' },
+    { type: 'highlight', text: 'Strengths' },
+    { type: 'item', text: '  • Code review discipline validated across 6 sessions' },
+    { type: 'item', text: '  • Response brevity consistently maintained' },
+    { type: 'gap' },
+    { type: 'warning', text: 'Stale (2)' },
+    { type: 'item', text: '  • projects/api-v2-migration.md → project shipped, move to archives' },
+    { type: 'item', text: '  • resources/old-auth-notes.md → superseded by new auth system' },
+    { type: 'gap' },
+    { type: 'highlight', text: 'Evolutions (3)' },
+    { type: 'item', text: '  Promote: areas/testing/no-mocks.md → definition' },
+    { type: 'item', text: '  Archive: projects/api-v2-migration.md' },
+    { type: 'item', text: '  Prune:   resources/old-auth-notes.md (obsolete)' },
+    { type: 'gap' },
+    { type: 'output', text: 'Apply? (y) n' },
+    { type: 'prompt', text: '> y' },
+    { type: 'highlight', text: '✓ Brain pruned. MEMORY.md: 14 → 11 entries.' },
+  ],
+};
+
+let currentMode = 'improve';
+let typeTimeout = null;
+
+function selectMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.t-mode-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('btn-' + mode);
+  if (btn) btn.classList.add('active');
+  renderTerminal(mode);
+
+  // Scroll to terminal
+  setTimeout(() => {
+    document.getElementById('terminal-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 50);
+}
+
+function renderTerminal(mode) {
+  if (typeTimeout) clearTimeout(typeTimeout);
+  const out = document.getElementById('terminal-output');
+  out.innerHTML = '';
+  const lines = terminals[mode];
+  let i = 0;
+
+  function addLine() {
+    if (i >= lines.length) return;
+    const l = lines[i++];
+    const el = document.createElement('div');
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(4px)';
+    el.style.transition = 'opacity 0.15s, transform 0.15s';
+
+    if (l.type === 'gap') {
+      el.innerHTML = '&nbsp;';
+    } else if (l.type === 'prompt') {
+      el.innerHTML = `<span class="t-prompt">❯</span> <span class="t-cmd">${escHtml(l.text.replace(/^> /, ''))}</span>`;
+    } else if (l.type === 'section') {
+      el.innerHTML = `<span class="t-section">${escHtml(l.text)}</span>`;
+    } else if (l.type === 'highlight') {
+      el.innerHTML = `<span class="t-highlight">${escHtml(l.text)}</span>`;
+    } else if (l.type === 'warning') {
+      el.innerHTML = `<span class="t-warning">${escHtml(l.text)}</span>`;
+    } else if (l.type === 'item') {
+      el.innerHTML = `<span class="t-item">${escHtml(l.text)}</span>`;
+    } else {
+      el.innerHTML = `<span class="t-output">${escHtml(l.text)}</span>`;
+    }
+
+    out.appendChild(el);
+    requestAnimationFrame(() => {
+      el.style.opacity = '1';
+      el.style.transform = 'translateY(0)';
+    });
+
+    const delay = l.type === 'gap' ? 60 : l.type === 'prompt' ? 300 : 80;
+    typeTimeout = setTimeout(addLine, delay);
+  }
+
+  addLine();
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+renderTerminal('improve');
+
+// ── SCROLL REVEAL ──
+const reveals = document.querySelectorAll('.reveal');
+const ro = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('visible'); ro.unobserve(e.target); }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+reveals.forEach(r => ro.observe(r));
+
+// ── STAT COUNTERS ──
+const statNums = document.querySelectorAll('.stat-num[data-target]');
+const statRo = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const el = e.target;
+      const target = parseInt(el.dataset.target);
+      const suffix = el.dataset.suffix || '';
+      if (isNaN(target)) return;
+      let current = 0;
+      const step = target / 30;
+      const timer = setInterval(() => {
+        current = Math.min(current + step, target);
+        el.textContent = Math.round(current) + suffix;
+        if (current >= target) clearInterval(timer);
+      }, 30);
+      statRo.unobserve(el);
+    }
+  });
+}, { threshold: 0.5 });
+statNums.forEach(n => statRo.observe(n));
+
+// ── COPY ──
+function copyInstall() {
+  const cmd = 'git clone git@github.com:renenel/agent-brain.git && cp -r agent-brain .claude/skills/';
+  navigator.clipboard.writeText(cmd).catch(() => {});
+  const flash = document.getElementById('copied-flash');
+  flash.classList.add('show');
+  setTimeout(() => flash.classList.remove('show'), 2500);
+  const btn = document.getElementById('copy-btn');
+  btn.textContent = 'copied!';
+  setTimeout(() => btn.textContent = 'copy', 2000);
+}
+
+// ── MODE CARD CLICK ──
+document.querySelectorAll('.mode-card').forEach(card => {
+  card.addEventListener('click', (e) => {
+    e.preventDefault();
+    const mode = card.dataset.mode;
+    selectMode(mode);
+  });
+});
+</script>
+</body>
+</html>
