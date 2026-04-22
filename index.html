@@ -969,18 +969,13 @@ footer {
   <span class="cta-eyebrow reveal">Open source. Any project.</span>
   <h2 class="cta-h2 reveal">Start building<br><em>better agents.</em></h2>
   <div style="display:flex;flex-direction:column;align-items:center;gap:16px;position:relative;z-index:1">
-    <a href="https://github.com/renenel/agent-brain" target="_blank" rel="noopener" class="btn-primary" style="font-size:15px;padding:18px 36px;text-decoration:none">
-      View on GitHub
-      <span>↗</span>
-    </a>
     <div class="cta-install reveal">
       <div class="cta-install-cmd">
-        <span class="kw">git clone</span> git@github.com:renenel/agent-brain.git<br>
-        <span class="kw">cp</span> -r agent-brain .claude/skills/
+        <span class="kw">npx</span> skills add renenel/agent-brain
       </div>
       <button class="cta-copy-btn" id="copy-btn" onclick="copyInstall()">copy</button>
     </div>
-    <p class="cta-footnote">Clone → drop <code style="font-family:var(--mono);color:var(--lime)">agent-brain/</code> into <code style="font-family:var(--mono);color:var(--lime)">.claude/skills/</code> → invoke with <code style="font-family:var(--mono);color:var(--lime)">/agent-brain</code></p>
+    <p class="cta-footnote">Or manually: clone <a href="https://github.com/renenel/agent-brain" target="_blank" rel="noopener" style="color:var(--lime);text-decoration:none">github.com/renenel/agent-brain</a> → drop into <code style="font-family:var(--mono);color:var(--lime)">.claude/skills/</code> → invoke with <code style="font-family:var(--mono);color:var(--lime)">/agent-brain</code></p>
   </div>
 </section>
 
@@ -1260,7 +1255,7 @@ statNums.forEach(n => statRo.observe(n));
 
 // ── COPY ──
 function copyInstall() {
-  const cmd = 'git clone git@github.com:renenel/agent-brain.git && cp -r agent-brain .claude/skills/';
+  const cmd = 'npx skills add renenel/agent-brain';
   navigator.clipboard.writeText(cmd).catch(() => {});
   const flash = document.getElementById('copied-flash');
   flash.classList.add('show');

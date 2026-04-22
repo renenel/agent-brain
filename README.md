@@ -10,17 +10,17 @@ Agents that remember. Agents that grow.
 
 ## Install
 
-Clone this repo, then copy the skill into your project (or globally):
-
 ```bash
-# Project-level (recommended)
-cp -r agent-brain /path/to/your/project/.claude/skills/
-
-# Global (available in all projects)
-cp -r agent-brain ~/.claude/skills/
+npx skills add renenel/agent-brain
 ```
 
-Claude Code picks up skills automatically — no config required.
+That's it. Installs into your current project for Claude Code, Cursor, Codex, and any other agent detected. Add `-g` to install globally.
+
+**Manual install:**
+```bash
+git clone https://github.com/renenel/agent-brain.git
+cp -r agent-brain/skills/agent-brain /path/to/your/project/.claude/skills/
+```
 
 ---
 
