@@ -536,6 +536,35 @@ section { padding: 120px 80px; }
 }
 .para-body { font-size: 13px; color: var(--text-muted); line-height: 1.65; }
 
+/* ── PARA INTRO ── */
+.para-intro {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 80px; align-items: center;
+  margin-bottom: 80px;
+}
+.para-brain-wrap {
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.para-brain-art {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 144%;
+  height: 144%;
+  transform: translate(-50%, -50%);
+  object-fit: contain;
+  object-position: center;
+  opacity: 0.9;
+  filter: grayscale(1) brightness(0.26) contrast(1.05);
+  pointer-events: none;
+}
+#brain-canvas {
+  width: 100%; height: 300px; display: block;
+  position: relative;
+  z-index: 1;
+}
+
 /* ── QUOTE ── */
 #quote {
   padding: 120px 80px;
@@ -684,6 +713,8 @@ footer {
   .flow-arrow { display: none; }
   .flow-step { border-right: 1px solid var(--border-dark); border-bottom: none; }
   .modes-grid, .para-grid { grid-template-columns: 1fr; }
+  .para-intro { grid-template-columns: 1fr; }
+  .para-brain-wrap { display: none; }
   .modes-header { grid-template-columns: 1fr; gap: 32px; }
   .terminal-wrapper { grid-template-columns: 1fr; }
   footer { flex-direction: column; gap: 16px; text-align: center; }
@@ -921,32 +952,40 @@ footer {
 
 <!-- PARA SYSTEM -->
 <section id="para">
-  <span class="section-tag reveal">Storage architecture</span>
-  <h2 class="section-h2 reveal">Two tiers.<br>One direction.</h2>
-  <p class="section-sub reveal">
-    Learnings don't all belong in the same place. The PARA system separates what the agent <em>looks up</em> from what the agent <em>is</em> — and over time, the best context gets promoted into the core.
-  </p>
+  <div class="para-intro">
+    <div class="para-intro-text">
+      <span class="section-tag reveal">Storage architecture</span>
+      <h2 class="section-h2 reveal">Two tiers.<br>One direction.</h2>
+      <p class="section-sub reveal">
+        Learnings don't all belong in the same place. The PARA system separates what the agent <em>looks up</em> from what the agent <em>is</em> — and over time, the best context gets promoted into the core.
+      </p>
+    </div>
+    <div class="para-brain-wrap reveal">
+      <img class="para-brain-art" src="brain.svg" alt="Brain illustration">
+      <canvas id="brain-canvas"></canvas>
+    </div>
+  </div>
 
   <div class="para-grid">
-    <div class="para-card reveal">
+    <div class="para-card reveal" data-brain="projects">
       <span class="para-letter">P</span>
       <span class="para-label">Active work</span>
       <h3 class="para-title">Projects</h3>
       <p class="para-body">Short-horizon work with a clear outcome. Closed projects move to Archives automatically.</p>
     </div>
-    <div class="para-card reveal" style="transition-delay:0.1s">
+    <div class="para-card reveal" style="transition-delay:0.1s" data-brain="areas">
       <span class="para-letter">A</span>
       <span class="para-label">Ongoing standards</span>
       <h3 class="para-title">Areas</h3>
       <p class="para-body">Responsibilities that persist over time. Coding standards, team conventions, agent identity traits.</p>
     </div>
-    <div class="para-card reveal" style="transition-delay:0.2s">
+    <div class="para-card reveal" style="transition-delay:0.2s" data-brain="resources">
       <span class="para-letter">R</span>
       <span class="para-label">Reference material</span>
       <h3 class="para-title">Resources</h3>
       <p class="para-body">Useful things to know but not act on. Domain knowledge, API docs, research notes.</p>
     </div>
-    <div class="para-card reveal" style="transition-delay:0.3s">
+    <div class="para-card reveal" style="transition-delay:0.3s" data-brain="archives">
       <span class="para-letter">A</span>
       <span class="para-label">Completed work</span>
       <h3 class="para-title">Archives</h3>
@@ -1264,6 +1303,239 @@ function copyInstall() {
   btn.textContent = 'copied!';
   setTimeout(() => btn.textContent = 'copy', 2000);
 }
+
+// ── BRAIN CANVAS (lateral / side view) ──
+(function () {
+  const canvas = document.getElementById('brain-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const LIME = '155, 236, 0';
+  const REGIONS = ['projects', 'areas', 'resources', 'archives'];
+  let cssW, cssH, cx, cy, rx, ry, brainPath;
+
+  function makeBrainPath() {
+    // Lateral right-hemisphere view — front = LEFT, back = RIGHT
+    // Strongly bias the silhouette toward a recognizable side profile:
+    // taller crown, fuller forehead, tighter rear, and a deeper temporal notch.
+    const p = new Path2D();
+
+    // Start at the front-lower temporal pole.
+    p.moveTo(cx - rx*.77, cy + ry*.47);
+
+    // Lower temporal lobe and ventral sweep, shortened to avoid a boat-like base.
+    p.bezierCurveTo(
+      cx - rx*.64, cy + ry*.76,
+      cx - rx*.28, cy + ry*.92,
+      cx + rx*.00, cy + ry*.86
+    );
+
+    // Rear underside rises sooner into the occipital mass.
+    p.bezierCurveTo(
+      cx + rx*.24, cy + ry*.82,
+      cx + rx*.50, cy + ry*.62,
+      cx + rx*.64, cy + ry*.38
+    );
+
+    // Integrate the lower-rear anatomy instead of forming a detached bump.
+    p.bezierCurveTo(
+      cx + rx*.72, cy + ry*.34,
+      cx + rx*.80, cy + ry*.26,
+      cx + rx*.78, cy + ry*.14
+    );
+
+    // Back of the hemisphere: compact with a slight inward break before the rear curve.
+    p.bezierCurveTo(
+      cx + rx*.86, cy + ry*.02,
+      cx + rx*.82, cy - ry*.20,
+      cx + rx*.74, cy - ry*.38
+    );
+    p.bezierCurveTo(
+      cx + rx*.70, cy - ry*.56,
+      cx + rx*.58, cy - ry*.74,
+      cx + rx*.40, cy - ry*.86
+    );
+
+    // High parietal crown with a more varied forehead-to-crown transition.
+    p.bezierCurveTo(
+      cx + rx*.16, cy - ry*1.04,
+      cx - rx*.06, cy - ry*1.08,
+      cx - rx*.22, cy - ry*1.03
+    );
+
+    // Forehead and frontal bulge with a more obvious front transition.
+    p.bezierCurveTo(
+      cx - rx*.44, cy - ry*.98,
+      cx - rx*.74, cy - ry*.74,
+      cx - rx*.88, cy - ry*.40
+    );
+
+    // More vertical frontal face.
+    p.bezierCurveTo(
+      cx - rx*.96, cy - ry*.18,
+      cx - rx*.98, cy + ry*.02,
+      cx - rx*.90, cy + ry*.15
+    );
+
+    // Deeper temporal notch to break the oval silhouette.
+    p.bezierCurveTo(
+      cx - rx*.72, cy + ry*.16,
+      cx - rx*.84, cy + ry*.30,
+      cx - rx*.77, cy + ry*.47
+    );
+
+    p.closePath();
+    return p;
+  }
+
+  // Use the same Path2D for containment — identity transform so coordinates match directly
+  function inBrain(x, y, pad = 0) {
+    if (!brainPath) return false;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const hit = ctx.isPointInPath(brainPath, x, y) &&
+      (pad <= 0 || (
+        ctx.isPointInPath(brainPath, x - pad, y) &&
+        ctx.isPointInPath(brainPath, x + pad, y) &&
+        ctx.isPointInPath(brainPath, x, y - pad) &&
+        ctx.isPointInPath(brainPath, x, y + pad)
+      ));
+    ctx.restore();
+    return hit;
+  }
+
+  // Lateral lobe regions matching the side-view path
+  function nodeRegion(x, y) {
+    if (x > cx + rx*0.40) return 'archives';    // occipital (back-right)
+    if (y > cy + ry*0.18) return 'resources';   // temporal (lower)
+    if (x < cx - rx*0.10) return 'projects';    // frontal (front-left, upper)
+    return 'areas';                             // parietal (upper-center)
+  }
+
+  let nodes = [];
+  function initNodes() {
+    nodes = [];
+    const bands = [
+      { target: 18, yMin: -1.00, yMax: -0.34 },
+      { target: 22, yMin: -0.38, yMax: 0.18 },
+      { target: 14, yMin: 0.14, yMax: 0.78 },
+    ];
+
+    bands.forEach(({ target, yMin, yMax }) => {
+      let tries = 0;
+      let added = 0;
+      while (added < target && tries < 3000) {
+        tries++;
+        const x = cx + (Math.random() * 1.86 - 0.93) * rx;
+        const y = cy + (yMin + Math.random() * (yMax - yMin)) * ry;
+        if (!inBrain(x, y, 7)) continue;
+        nodes.push({
+          x, y,
+          vx: (Math.random() - 0.5) * 0.22,
+          vy: (Math.random() - 0.5) * 0.22,
+          r:  Math.random() * 1.5 + 0.7,
+          pulse: Math.random() * Math.PI * 2,
+          region: nodeRegion(x, y),
+        });
+        added++;
+      }
+    });
+  }
+
+  function setup() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    cssW = rect.width; cssH = rect.height;
+    if (!cssW || !cssH) { setTimeout(setup, 80); return; }
+    canvas.width  = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cx = cssW * 0.52; cy = cssH * 0.435;
+    rx = cssW * 0.255; ry = cssH * 0.37;
+    brainPath = makeBrainPath();
+    initNodes();
+  }
+
+  let activeRegion = null;
+  const rA = { projects: 0.2, areas: 0.2, resources: 0.2, archives: 0.2 };
+
+  function drawOutline() {
+    ctx.save();
+    // Region labels
+    ctx.font = `600 10px 'IBM Plex Mono', monospace`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    [
+      { r:'projects',  x: cx - rx*.46, y: cy - ry*.16, t:'P' },
+      { r:'areas',     x: cx + rx*.12, y: cy - ry*.60, t:'A' },
+      { r:'resources', x: cx - rx*.06, y: cy + ry*.40, t:'R' },
+      { r:'archives',  x: cx + rx*.46, y: cy - ry*.02, t:'A' },
+    ].forEach(l => {
+      ctx.fillStyle = `rgba(${LIME},${(rA[l.r] * 0.65).toFixed(3)})`;
+      ctx.fillText(l.t, l.x, l.y);
+    });
+
+    ctx.restore();
+  }
+
+  function drawBrain() {
+    if (!cssW) return;
+    ctx.clearRect(0, 0, cssW, cssH);
+
+    REGIONS.forEach(r => {
+      const tgt = activeRegion === null ? 0.22 : (activeRegion === r ? 1.0 : 0.05);
+      rA[r] += (tgt - rA[r]) * 0.09;
+    });
+
+    drawOutline();
+
+    nodes.forEach(n => {
+      n.vx += (Math.random() - 0.5) * 0.025;
+      n.vy += (Math.random() - 0.5) * 0.025;
+      n.vx *= 0.98; n.vy *= 0.98;
+      n.pulse += 0.018;
+      const nx = n.x + n.vx, ny = n.y + n.vy;
+      if (inBrain(nx, ny, 5)) { n.x = nx; n.y = ny; } else { n.vx *= -0.8; n.vy *= -0.8; }
+
+      const ra    = rA[n.region];
+      const pulse = activeRegion === null ? 0.08 * Math.sin(n.pulse) : 0;
+      const alpha = Math.max(0.03, ra + pulse);
+      const r     = activeRegion === n.region ? n.r * 1.7 : n.r;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${LIME},${alpha.toFixed(3)})`;
+      ctx.fill();
+    });
+
+    const maxD = 82;
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i], b = nodes[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const d  = Math.sqrt(dx*dx + dy*dy);
+        if (d > maxD) continue;
+        const sameR = a.region === b.region;
+        const ra    = Math.min(rA[a.region], rA[b.region]);
+        const alpha = (1 - d/maxD) * ra * (sameR ? 0.65 : 0.16);
+        if (alpha < 0.008) continue;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+        ctx.strokeStyle = `rgba(${LIME},${Math.min(alpha, 0.55).toFixed(3)})`;
+        ctx.lineWidth   = (sameR && activeRegion === a.region) ? 1.1 : 0.55;
+        ctx.stroke();
+      }
+    }
+
+    requestAnimationFrame(drawBrain);
+  }
+
+  document.querySelectorAll('.para-card[data-brain]').forEach(card => {
+    card.addEventListener('mouseenter', () => { activeRegion = card.dataset.brain; });
+    card.addEventListener('mouseleave', () => { activeRegion = null; });
+  });
+
+  window.addEventListener('resize', setup);
+  setup();
+  requestAnimationFrame(drawBrain);
+})();
 
 // ── MODE CARD CLICK ──
 document.querySelectorAll('.mode-card').forEach(card => {
