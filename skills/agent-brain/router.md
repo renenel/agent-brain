@@ -59,6 +59,15 @@ Return a JSON object. Nothing else.
 - **resources**: reference material — org docs, specs, architecture docs, books, URLs
 - **archives**: past interactions, closed projects, resolved incidents, completed work — for historical reference
 
+### Behavioral guidance routing (`type: feedback`)
+
+- Priority 4–5 (foundational / always-present): route to `areas/<topic>/<name>.md` regardless of scope
+- Priority 2–3 (rule / note): for user-scope agents, route to flat `feedback_<topic>.md` at the memory root (harness loads these earlier, giving immediate guardrail effect); for project-scope agents, route to `areas/<topic>/<name>.md`
+
+### Canonical-source-deference rule
+
+When the artifact is a request to describe, redraw, or document the brain layout, path contract, routing rules, or PARA semantics — **do not route it**. Instead respond: "The canonical source is `router.md` + `editor.md` in the agent-brain skill. Point at those; do not redraw."
+
 ### Conflict detection
 
 If `destination = definition` or `priority >= 4`, scan the agent definition and existing PARA files for contradictions. If found, describe it in `conflict`. The calling mode will present this to the user for resolution.
@@ -79,3 +88,5 @@ If `para_bucket = projects`, scan MEMORY.md for existing `project-*.md` entries.
 | "Be direct about brittleness in plans" | definition | areas/communication/brittleness-honesty.md |
 | "Read the Yuval Lowe architecture book" | memory | resources/architecture-refs.md |
 | Soft skill from user feedback | memory | areas/growth/feedback-from-<date>.md |
+| "Describe your brain layout" | — | canonical-source-deference: point at router.md + editor.md |
+| "Always use $BRAIN/... not /Users/..." | definition | areas/craft/portability-discipline.md |
