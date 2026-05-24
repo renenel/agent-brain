@@ -26,16 +26,17 @@ Read the supporting docs in this directory when you need them:
 
 ### Scope variants
 
-Path contract has two variants depending on agent scope:
+Path contract has three variants depending on agent scope:
 
-| Element | Project-scope (in repo) | User-scope (cross-project) |
-|---|---|---|
-| Definition | `<repo>/.claude/agents/<name>.md` | `~/.claude/agents/<name>.md` |
-| MEMORY index | `<repo>/.claude/agent-memory/<name>/MEMORY.md` | `~/.claude/agent-memory/<name>/MEMORY.md` |
-| PARA tree | `<repo>/.agent-brain/<name>/{areas,projects,resources,archives}/` | `~/.claude/agent-memory/<name>/.agent-brain/{areas,projects,resources,archives}/` |
-| Flat behavioral memories | n/a (everything goes through PARA) | `~/.claude/agent-memory/<name>/{user,feedback,project,reference}_*.md` (harness convention) |
+| Element | Project-scope (in repo) | User-scope (cross-project) | Plugin-scope (marketplace) |
+|---|---|---|---|
+| Definition | `<repo>/.claude/agents/<name>.md` | `~/.claude/agents/<name>.md` | `$PLUGIN_ROOT/agents/<name>.md` |
+| MEMORY index | `<repo>/.claude/agent-memory/<name>/MEMORY.md` | `~/.claude/agent-memory/<name>/MEMORY.md` | `$PLUGIN_ROOT/runtime/<name>/memory/MEMORY.md` |
+| PARA tree | `<repo>/.agent-brain/<name>/{areas,projects,resources,archives}/` | `~/.claude/agent-memory/<name>/.agent-brain/{areas,projects,resources,archives}/` | `$PLUGIN_ROOT/runtime/<name>/memory/.agent-brain/{areas,projects,resources,archives}/` |
 
-User-scope agents have a hybrid layout: the harness's flat `<type>_<topic>.md` files at the root coexist with the PARA tree under `.agent-brain/`. Routing decisions still use PARA buckets; the flat files are early-loaded behavioral guardrails.
+Every agent uses pure 2-tier PARA: priority 4–5 entries inlined as references in the agent's `.md`, priority 2–3 entries indexed via MEMORY.md → PARA tree. No flat-file root layer.
+
+**Plugin-scope detection is automatic.** The skill walks up from the agent's `.md` file looking for `.claude-plugin/plugin.json` (Claude Code's existing plugin marker). When found, `$PLUGIN_ROOT` resolves to that directory and the cache mirror path resolves via `~/.claude/plugins/installed_plugins.json` (Claude Code's existing install registry). Plugin-scope agent files declare nothing — no roots block, no plugin awareness, no per-agent boilerplate. See editor.md for the full detection algorithm and cache dual-write mechanics.
 
 ### ✅ Write here (project-scope defaults)
 | Artifact | Path |
