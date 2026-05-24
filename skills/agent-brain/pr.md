@@ -6,11 +6,15 @@ Triggered when `AGENT_AUTO_IMPROVE=1` is set in the environment, or when the use
 
 ## Pre-flight checks
 
-1. Run `git status` — if there are uncommitted changes to agent files (`.claude/agents/`, `.agent-brain/`, `.claude/agent-memory/`), abort and warn:
+1. Determine the **active scope** per `editor.md` ("Scope detection"). This selects the git working tree to commit in:
+   - **project-scope** → cwd / current repo
+   - **user-scope** → cannot PR (`~/.claude/` is not a repo); fall back to local-only writes
+   - **plugin-scope** → `$GIT_ROOT` (the marketplace clone). All `git` commands below run with `git -C $GIT_ROOT ...`.
+2. Run `git status` in the active working tree — if there are uncommitted changes to agent files (paths listed under "What to stage"), abort and warn:
    ```
    ⚠ Uncommitted agent changes detected. Commit or stash them before running in CI mode.
    ```
-2. Confirm you are in a git repository. If not, abort.
+3. Confirm the active working tree is a git repository. If not, abort.
 
 ## Branch naming
 
@@ -25,12 +29,25 @@ Examples:
 
 If a branch with that name already exists, append `-2`, `-3`, etc.
 
+For plugin-scope: run all branch operations in `$GIT_ROOT`, not in cwd. The PR opens against `$SOURCE_REPO` (the marketplace clone's upstream), so it lands on the canonical agent definition repo — not on any project the user happens to be working in.
+
 ## What to stage
 
-Stage ONLY:
+Stage ONLY (paths depend on scope; resolve via `editor.md`):
+
+**Project-scope:**
 - `.claude/agents/<name>.md` (if modified)
 - `.claude/agent-memory/<name>/MEMORY.md` (if modified)
 - `.agent-brain/<name>/**` (any new or modified PARA files)
+
+**Plugin-scope (paths relative to `$GIT_ROOT`):**
+- `<plugin-rel>/agents/<name>.md` (if modified)
+- `<plugin-rel>/runtime/<name>/memory/MEMORY.md` (if modified)
+- `<plugin-rel>/runtime/<name>/memory/.agent-brain/**` (any new or modified PARA files)
+
+where `<plugin-rel>` is `$PLUGIN_ROOT` expressed relative to `$GIT_ROOT` (e.g. `guilds/platform`).
+
+The `$CACHE_BRAIN` mirror is **never** committed — it lives in `~/.claude/plugins/cache/...` and is rebuilt on `/plugin update`. Only `$BRAIN` (inside `$GIT_ROOT`) is git-tracked.
 
 Never stage application code, config files, or anything outside agent files.
 

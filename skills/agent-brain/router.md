@@ -61,8 +61,10 @@ Return a JSON object. Nothing else.
 
 ### Behavioral guidance routing (`type: feedback`)
 
-- Priority 4–5 (foundational / always-present): route to `areas/<topic>/<name>.md` regardless of scope
-- Priority 2–3 (rule / note): for user-scope agents, route to flat `feedback_<topic>.md` at the memory root (harness loads these earlier, giving immediate guardrail effect); for project-scope agents, route to `areas/<topic>/<name>.md`
+All scopes, pure 2-tier PARA — no flat-file branch:
+
+- Priority 4–5 (foundational / always-present): route to `areas/<topic>/<name>.md` and inline-reference from the agent's `.md`
+- Priority 2–3 (rule / note): route to `areas/<topic>/<name>.md` and index via MEMORY.md
 
 ### Canonical-source-deference rule
 
