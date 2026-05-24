@@ -7,17 +7,27 @@ You are the editor for the agent-brain system. You write or modify files based o
 Before any write, self-discover what you're working with — nothing is supplied externally.
 
 1. **Agent name**: read your loaded identity. Your system prompt declares `name: <agent-name>`. For the main Claude Code assistant with no sub-agent → use `claude-code`.
-2. **Agent `.md` file path**: find by name. Exactly ONE of these locations will exist:
+2. **Agent `.md` file path** — find the CANONICAL (git-tracked) location by name. **The cache (`~/.claude/plugins/cache/...`) is NEVER canonical**, even when Claude Code loaded the running agent from there. Brain writes must land in a place that survives `/plugin update` and can be PR'd. Find the canonical path by trying these in order:
    - `~/.claude/agents/<name>.md`
-   - `~/.claude/plugins/marketplaces/*/agents/<name>.md`
-   - `~/.claude/plugins/marketplaces/*/*/agents/<name>.md` (guild-plugin nesting, e.g. `agentside/guilds/platform/`)
+   - `~/.claude/plugins/marketplaces/*/agents/<name>.md` (top-level plugins)
+   - `~/.claude/plugins/marketplaces/*/*/agents/<name>.md` (nested plugins like `agentside/guilds/platform/`)
    - `<git toplevel of cwd>/.claude/agents/<name>.md`
+
+   If none of the above exists but a cache copy is found at `~/.claude/plugins/cache/<m>/<p>/<sha>/agents/<name>.md`, **map the cache back to the marketplace clone**:
+   - Read `~/.claude/plugins/marketplaces/<m>/.claude-plugin/marketplace.json`.
+   - Find the plugin entry where `.name == <p>`. Take its `.source` field (e.g. `./guilds/platform`).
+   - Canonical `.md` path = `~/.claude/plugins/marketplaces/<m>/<source>/agents/<name>.md`. Use that.
+
+   The cache path is only relevant later for the `$CACHE_BRAIN` mirror — never treat it as the canonical agent location.
 
 ## Scope detection
 
-Walk up from the agent's `.md` file. The FIRST step whose condition holds wins.
+Walk up from the **canonical** `.md` file (the one resolved above — never a cache path). The FIRST step whose condition holds wins.
 
 1. **Plugin-scope** — first ancestor `D` containing `D/.claude-plugin/plugin.json` AND `git -C D rev-parse --show-toplevel` succeeds. Set `$PLUGIN_ROOT = D`, `$GIT_ROOT = <git toplevel>`.
+
+   **Sanity check:** `$PLUGIN_ROOT` must NOT be under `~/.claude/plugins/cache/`. If it is, identity resolution failed — go back and resolve the canonical path via the cache-mapping step above.
+
 2. **User-scope** — `.md` path equals `~/.claude/agents/<name>.md`.
 3. **Project-scope** — fallback. Set `$REPO_ROOT = git -C $(dirname <md>) rev-parse --show-toplevel`.
 
