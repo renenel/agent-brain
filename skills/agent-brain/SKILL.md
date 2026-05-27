@@ -57,25 +57,40 @@ Every agent uses pure 2-tier PARA: priority 4–5 entries inlined as references 
 
 ## Identity resolution
 
-Before doing anything else, determine which agent you are improving.
+Before doing anything else, resolve which agent you are improving **and its scope**
+using `editor.md` → "Identity + path discovery" + "Scope detection". That resolver is
+the single source of truth: it finds the agent's CANONICAL `.md` across user-scope
+(`~/.claude/agents/<name>.md`), plugin-scope
+(`~/.claude/plugins/marketplaces/*/*/agents/<name>.md`, incl. the cache→clone mapping),
+and project-scope (cwd repo), then derives scope from where the definition actually lives.
+For the main Claude Code assistant (no sub-agent), use `claude-code`.
 
-1. List `.claude/agent-memory/` — pick the subdirectory that matches the current agent.
-   For the main Claude Code assistant (not a sub-agent), use `claude-code` as the name.
-2. If still ambiguous, ask: "Which agent should I update? (options visible in `.claude/agent-memory/`)"
+**Do NOT identify the agent or decide its scope by listing the cwd's
+`.claude/agent-memory/`.** A plugin- or user-scope agent doing work inside some repo
+would be mis-classified project-scope and its real brain (e.g. a plugin's
+`runtime/<name>/memory/`) made invisible — the skill would then offer to mint an empty
+brain in the wrong repo. If the loaded identity is plugin-namespaced (`<plugin>:<name>`),
+strip the `<plugin>:` prefix before the `<name>.md` lookup.
 
-The agent name determines:
-- Which definition file to edit: `.claude/agents/<name>.md` (may not exist for the main assistant)
-- Where PARA files live: `.agent-brain/<name>/`
-- Where MEMORY.md lives: `.claude/agent-memory/<name>/MEMORY.md`
+All paths (definition, MEMORY.md, PARA tree) derive from the **detected scope** — see
+editor.md "Path resolution shorthand", never from the cwd. If resolution is genuinely
+ambiguous, ask: "Which agent should I update?"
 
 ## Pre-flight (runs before every mode except validate)
 
 Before executing any mode, silently check:
 
-1. **Brain exists?** — does `MEMORY.md` exist at the resolved path?
-   If not: show the user what will be created and ask permission before proceeding:
-   > "No brain found for `<name>`. Create it now? This will make: MEMORY.md, and `.agent-brain/<name>/{areas,projects,resources,archives}/`"
+1. **Brain exists?** — does `MEMORY.md` exist at the **scope-resolved** brain path?
+   Resolve it via editor.md, NOT by assuming the cwd's `.claude/agent-memory/`:
+   - plugin-scope → `$PLUGIN_ROOT/runtime/<name>/memory/MEMORY.md`
+   - user-scope → `~/.claude/agent-memory/<name>/MEMORY.md`
+   - project-scope → `<repo>/.claude/agent-memory/<name>/MEMORY.md`
+   If absent at that canonical location: show the user what will be created and ask
+   permission before proceeding:
+   > "No brain found for `<name>` (scope: `<scope>`). Create it now? This will make: MEMORY.md and the PARA tree at `<canonical brain root>`."
    On approval: create the structure with an empty `<!-- brain-schema: v1 -->` MEMORY.md. On denial: stop.
+   **Never** create a project-scope brain in the cwd for an agent that resolved to plugin-
+   or user-scope — a plugin/user agent's brain is created at its canonical home or not at all.
 
 2. **PARA dirs exist?** — do the four PARA buckets exist under the brain root?
    If not (but MEMORY.md does exist): same prompt, same approval gate, just for the missing dirs.
