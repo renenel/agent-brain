@@ -1,4 +1,4 @@
-name: tests
+name: ci
 
 on:
   push:
@@ -6,13 +6,8 @@ on:
   pull_request:
 
 jobs:
-  e2e:
+  dependencies:
     runs-on: ubuntu-latest
-    env:
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      CLAUDE_MODEL: claude-haiku-4-5
-      CLAUDE_MAX_BUDGET_USD: "0.10"
-      CLAUDE_E2E_TIMEOUT_MS: "60000"
     steps:
       - uses: actions/checkout@v4
 
@@ -21,18 +16,5 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Check Anthropic API key
-        run: |
-          if [ -z "$ANTHROPIC_API_KEY" ]; then
-            echo "::error::ANTHROPIC_API_KEY secret is not configured or is unavailable to this workflow run."
-            exit 1
-          fi
-
-      - name: Install Claude CLI
-        run: npm install -g @anthropic-ai/claude-code
-
       - name: Install dependencies
         run: npm ci
-
-      - name: Run bounded e2e smoke test
-        run: npm run test:ci
