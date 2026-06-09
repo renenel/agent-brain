@@ -62,9 +62,11 @@ Changes:
 - <bullet per file changed with one-line description>
 ```
 
+Before committing: strip shell metacharacters (`` $ ` \ " ' ; | & ``) from the summary line and cap it at 72 characters. Pass the full commit message via heredoc — never inline string interpolation.
+
 ## PR
 
-Open with `gh pr create`:
+Open with `gh pr create`. Pass the body via `--body-file` (write to a temp file first) — never inline the body string.
 
 ```
 Title: [Agent: <name>] <mode> — <summary>
