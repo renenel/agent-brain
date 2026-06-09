@@ -173,6 +173,7 @@ After changes land, run a fast health check on the brain:
 3. Scan for any `Your MEMORY.md is currently empty` string in the agent's `.md` file — flag if found (stale boilerplate baked in)
 4. Scan agent `.md`, MEMORY.md, and PARA files for absolute paths matching `/Users/[^/]+/` or `/home/[^/]+/` — flag every match
 5. Count MEMORY.md lines — warn if approaching 200-line harness limit
+6. Flag any MEMORY.md entries pointing into `archives/` — archives are unindexed by design
 
 If any issues found, append to output:
 
@@ -196,6 +197,7 @@ Audit an existing agent's brain for structural issues without making changes.
 6. **Scope ambiguity** — if both `~/.claude/agent-memory/<name>/` and a project-local `.agent-brain/<name>/` exist, flag as ambiguous
 7. **Hardcoded user paths** — scan agent `.md`, MEMORY.md, and all PARA files for `/Users/[^/]+/` or `/home/[^/]+/` patterns. Flag every match with portable replacement suggestion
 8. **PARA purity** — count flat files at brain root that belong in PARA buckets
+9. **Archives indexed** — flag any MEMORY.md entries pointing into `archives/` as drift (archives are unindexed by design)
 
 Report all issues. Validate runs read-only — no changes applied.
 
@@ -282,8 +284,9 @@ Also prunes and consolidates so the next dream runs on a leaner corpus.
 
 - Agent definition file
 - MEMORY.md index
-- All files listed in MEMORY.md
+- All files listed in MEMORY.md (update `last_accessed` on each file read, per editor.md timestamp rules)
 - All files in `.agent-brain/<name>/` (including any not yet in MEMORY.md — these are orphans)
+- All files in `archives/` (unindexed — scan the folder directly)
 
 ### Step 2 — Analyse
 
@@ -301,10 +304,14 @@ that should be promoted to the definition; missing coverage for recurring situat
 
 **Evolutions** — specific proposed changes:
   - Promote: `<memory file>` → definition (creates PARA core file + definition reference + removes memory entry)
-  - Archive: `<active file>` → archives (project closed, resource stale)
-  - Consolidate: merge `<file A>` + `<file B>` into one
+  - Archive (TTL): `<file>` — last accessed `<date>` (projects/ or resources/ with `last_accessed` > 90 days; Areas are exempt; files with `last_accessed: unknown` are flagged for human review, not auto-archived)
+  - Archive (manual): `<active file>` → archives (project closed, resource stale)
+  - Consolidate cluster: `areas/<topic>/` (N entries → 1 hub) — for subtopics with ≥3 MEMORY.md entries; hub file keeps full detail and links to siblings via `[[filename]]`; only hub entry remains in MEMORY.md
+  - Consolidate: merge `<file A>` + `<file B>` — for files with >70% semantic overlap; show a one-line summary of what would be lost
   - New entry: add `<something>` to `<para_subpath>`
   - Prune: remove `<file>` (orphaned, redundant, or empty value)
+
+**Target:** after applying all evolutions, MEMORY.md should be 30–70% shorter than before.
 
 ### Step 3 — Present report
 
@@ -314,11 +321,13 @@ Show the full growth report. Let the user pick which evolutions to apply.
 
 Consolidate redundant MEMORY.md entries, fix orphans (add to MEMORY.md or delete),
 archive closed projects, condense verbose entries.
-Re-sort MEMORY.md by bucket: areas first, then projects, resources, archives.
+Re-sort MEMORY.md by bucket: areas first, then projects, resources.
+**Remove any MEMORY.md entries pointing into `archives/`** — archives are unindexed by design.
 Goal: MEMORY.md must be shorter and correctly sorted after dream than before.
 
 ### Step 5 — Apply
 
 Read `editor.md` and apply approved evolutions + pruning.
+When archiving a file: move it to `archives/`, remove its MEMORY.md entry, do NOT add a new entry.
 If CI mode: read `pr.md` and open a PR.
 

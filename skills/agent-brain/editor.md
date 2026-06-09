@@ -119,11 +119,28 @@ When inserting definition references, use `$BRAIN/<para_subpath>` notation. When
 Create or append to a PARA file at `.agent-brain/<agent-name>/<para_subpath>`.
 
 Rules:
-- If the file doesn't exist: create it with a clear `#` heading and the content
-- If it exists: append a new section, don't rewrite existing content
+- If the file doesn't exist: create it with a clear `#` heading preceded by timestamp headers (see Timestamps below), then the content
+- If it exists: append a new section, don't rewrite existing content; update `last_accessed` timestamp
 - No artificial length limits — write what the content requires, nothing more
-- After writing: add or update the entry in `MEMORY.md`:
+- After writing: **if the bucket is NOT `archives`**, add or update the entry in `MEMORY.md`:
   `- [<filename>](.agent-brain/<name>/<para_subpath>) — <one-line description> [PARA:<bucket>]`
+- **Archives are never indexed in MEMORY.md.** Write the file to `archives/` but do not touch MEMORY.md.
+
+### Timestamps
+
+Every PARA file must begin with two HTML comment lines before the `#` heading:
+
+```markdown
+<!-- created: YYYY-MM-DD -->
+<!-- last_accessed: YYYY-MM-DD -->
+
+# Heading
+```
+
+- On **new file**: set both to today's date.
+- On **read** (during dream, improve, or any brain operation that opens the file): update `last_accessed` to today.
+- On **append**: update `last_accessed` to today.
+- Existing files without timestamps: treat `last_accessed` as `unknown` — do not auto-archive, flag in dream for human review instead.
 
 ### Definition writes (destination = definition)
 
@@ -201,6 +218,8 @@ Insert references in the most semantically relevant section. If the content does
 - [filename](./path/to/file.md) — one-line description [PARA:bucket]
 ```
 
-Keep entries sorted by bucket: areas first, then projects, resources, archives. After every write, re-sort the full MEMORY.md to maintain this order.
+Keep entries sorted by bucket: areas first, then projects, resources. **Archives are never listed in MEMORY.md** — they live in the `archives/` folder and are scanned directly at runtime when historical context is needed.
+
+After every write, re-sort the full MEMORY.md to maintain this order.
 
 The first line of MEMORY.md must be: `<!-- brain-schema: v1 -->`. On every improve/dream/learn, check this. If missing or outdated, prepend it.
