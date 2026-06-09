@@ -8,6 +8,8 @@ on:
 jobs:
   e2e:
     runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -15,6 +17,13 @@ jobs:
         with:
           node-version: 22
           cache: npm
+
+      - name: Check Anthropic API key
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::error::ANTHROPIC_API_KEY secret is not configured or is unavailable to this workflow run."
+            exit 1
+          fi
 
       - name: Install Claude CLI
         run: npm install -g @anthropic-ai/claude-code
@@ -24,5 +33,3 @@ jobs:
 
       - name: Run e2e tests
         run: npm test
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
