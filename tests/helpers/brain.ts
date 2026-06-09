@@ -3,7 +3,7 @@ import { join } from 'path'
 import { existsSync } from 'fs'
 import { expect } from 'vitest'
 
-const AGENT_NAME = 'test-agent'
+const AGENT_NAME = 'claude-code'
 
 export function agentMdPath(tempDir: string): string {
   return join(tempDir, `.claude/agents/${AGENT_NAME}.md`)

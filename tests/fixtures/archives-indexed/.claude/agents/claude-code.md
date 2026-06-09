@@ -1,6 +1,6 @@
 ---
-name: test-agent
-description: Test agent with a dense cluster of areas/engineering entries.
+name: claude-code
+description: Test agent with archives/ entries incorrectly indexed in MEMORY.md.
 ---
 
 # Test Agent

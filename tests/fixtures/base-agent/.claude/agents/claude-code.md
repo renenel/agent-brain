@@ -1,9 +1,13 @@
 ---
-name: test-agent
-description: Test agent with a stale project file for TTL testing.
+name: claude-code
+description: Test fixture agent for agent-brain e2e tests.
 ---
 
 # Test Agent
+
+## How You Work
+
+You are a minimal agent used for testing the agent-brain skill.
 
 ## Memory
 

@@ -1,4 +1,4 @@
-import { execaCommand } from 'execa'
+import { execa } from 'execa'
 import { cp, mkdir, rm, symlink } from 'fs/promises'
 import { tmpdir } from 'os'
 import { join } from 'path'
@@ -26,7 +26,7 @@ export async function runSkill(fixtureName: string, command: string): Promise<Ru
   await mkdir(skillsDir, { recursive: true })
   await symlink(SKILL_SRC, join(skillsDir, 'agent-brain'))
 
-  const result = await execaCommand(`claude --print "${command}"`, {
+  const result = await execa('claude', ['--print', command], {
     cwd: tempDir,
     reject: false,
     timeout: 90_000,

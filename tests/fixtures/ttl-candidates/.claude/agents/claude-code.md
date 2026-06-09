@@ -1,13 +1,9 @@
 ---
-name: test-agent
-description: Minimal test agent for agent-brain e2e tests.
+name: claude-code
+description: Test agent with a stale project file for TTL testing.
 ---
 
 # Test Agent
-
-## How You Work
-
-You are a minimal agent used for testing the agent-brain skill.
 
 ## Memory
 

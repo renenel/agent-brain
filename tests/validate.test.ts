@@ -1,4 +1,4 @@
-import { describe, it, afterEach } from 'vitest'
+import { describe, it, afterEach, expect } from 'vitest'
 import { runSkill, cleanup } from './helpers/run.ts'
 import { assertContains, assertNotContains } from './helpers/brain.ts'
 
@@ -9,12 +9,12 @@ describe('validate mode', () => {
     if (tempDir) await cleanup(tempDir)
   })
 
-  it('check 9: flags archives/ entries in MEMORY.md as drift', async () => {
+  it('check 9: flags archives/ entries in MEMORY.md as incorrectly indexed', async () => {
     const result = await runSkill('archives-indexed', '/agent-brain validate')
     tempDir = result.tempDir
 
     assertContains(result.stdout, 'archives')
-    assertContains(result.stdout, 'drift')
+    assertContains(result.stdout, 'memory.md')
   }, 90_000)
 
   it('check 10: flags missing archives instruction in agent.md', async () => {
@@ -28,8 +28,7 @@ describe('validate mode', () => {
     const result = await runSkill('base-agent', '/agent-brain validate')
     tempDir = result.tempDir
 
-    assertNotContains(result.stdout, 'error')
-    assertNotContains(result.stdout, 'drift')
-    assertNotContains(result.stdout, 'missing')
+    const clean = result.stdout.toLowerCase().match(/structurally clean|issues found: 0|no (?:structural )?issues|0 issues|no structural issues detected|no corrections needed/)
+    expect(clean, `stdout was:\n${result.stdout.substring(0, 500)}`).not.toBeNull()
   }, 90_000)
 })

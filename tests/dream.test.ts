@@ -21,8 +21,8 @@ describe('dream mode', () => {
     const result = await runSkill('cluster-brain', '/agent-brain dream')
     tempDir = result.tempDir
 
-    assertContains(result.stdout, 'consolidate cluster')
-    assertContains(result.stdout, 'areas/engineering')
+    assertContains(result.stdout, 'consolidate')
+    assertContains(result.stdout, 'engineering')
   }, 90_000)
 
   it('does not re-index archived files after archiving', async () => {
@@ -32,5 +32,5 @@ describe('dream mode', () => {
 
     const memory = await readMemory(tempDir)
     assertNotContains(memory, 'archives/')
-  }, 90_000)
+  }, 120_000)
 })

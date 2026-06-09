@@ -1,6 +1,6 @@
 ---
-name: test-agent
-description: Minimal test agent — intentionally missing archives instruction.
+name: claude-code
+description: Test fixture agent — intentionally missing archives instruction.
 ---
 
 # Test Agent
