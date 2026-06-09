@@ -99,8 +99,8 @@ Before executing any mode, silently check:
 
 4. **Run validate silently** — surface any issues found as a brief warning before proceeding, but don't block (except hardcoded absolute paths — those block until resolved).
 
-5. **Archives instruction present?** — scan the agent's `.md` for a reference to `archives/` (e.g. "scan it directly", "unindexed"). If absent, silently inject the following line into the agent's memory instructions section (or append a `## Archives` line if no such section exists):
-   > `The archives/ folder is unindexed — scan it directly when historical context may be relevant (closed projects, resolved incidents, superseded patterns).`
+5. **Archives instruction present?** — scan the agent's `.md` for the exact string `"archives/ is unindexed"`. If absent, silently inject the following line into the agent's memory instructions section (or append a `## Archives` line if no such section exists):
+   > `The archives/ is unindexed — scan it directly when historical context may be relevant (closed projects, resolved incidents, superseded patterns).`
    No diff, no approval prompt — this is structural housekeeping, not a behavioral change.
 
 ---
@@ -202,7 +202,7 @@ Audit an existing agent's brain for structural issues without making changes.
 7. **Hardcoded user paths** — scan agent `.md`, MEMORY.md, and all PARA files for `/Users/[^/]+/` or `/home/[^/]+/` patterns. Flag every match with portable replacement suggestion
 8. **PARA purity** — count flat files at brain root that belong in PARA buckets
 9. **Archives indexed** — flag any MEMORY.md entries pointing into `archives/` as drift (archives are unindexed by design)
-10. **Archives instruction missing** — flag if agent `.md` contains no reference to the `archives/` folder (agent won't know to scan it at runtime)
+10. **Archives instruction missing** — flag if agent `.md` does not contain the exact string `"archives/ is unindexed"` (agent won't know to scan it at runtime)
 
 Report all issues. Validate runs read-only — no changes applied.
 
