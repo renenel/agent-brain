@@ -128,11 +128,11 @@ Rules:
 
 ### Timestamps
 
-Every PARA file must begin with two HTML comment lines before the `#` heading:
+Every PARA file must begin with two metadata lines before the `#` heading:
 
 ```markdown
-<!-- created: YYYY-MM-DD -->
-<!-- last_accessed: YYYY-MM-DD -->
+created: YYYY-MM-DD
+last_accessed: YYYY-MM-DD
 
 # Heading
 ```
