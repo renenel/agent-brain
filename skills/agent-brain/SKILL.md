@@ -313,7 +313,7 @@ that should be promoted to the definition; missing coverage for recurring situat
 
 **Evolutions** — specific proposed changes:
   - Promote: `<memory file>` → definition (creates PARA core file + definition reference + removes memory entry)
-  - Archive (TTL): `<file>` — last accessed `<date>` (projects/ or resources/ with `last_accessed` > 90 days; Areas are exempt; files with `last_accessed: unknown` are flagged for human review, not auto-archived)
+  - Archive (TTL): `<file>` — last accessed `<date>` (projects/ or resources/ with `last_accessed` > 90 days; Areas are exempt; files with no timestamps are silently skipped — TTL only applies to files that have been accessed at least once)
   - Archive (manual): `<active file>` → archives (project closed, resource stale)
   - Consolidate cluster: `areas/<topic>/` (N entries → 1 hub) — for subtopics with ≥3 MEMORY.md entries; hub file keeps full detail and links to siblings via `[[filename]]`; only hub entry remains in MEMORY.md
   - Consolidate: merge `<file A>` + `<file B>` — for files with >70% semantic overlap; show a one-line summary of what would be lost

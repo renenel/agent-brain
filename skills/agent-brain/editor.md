@@ -140,7 +140,7 @@ last_accessed: YYYY-MM-DD
 - On **new file**: set both to today's date.
 - On **read** (during dream, improve, or any brain operation that opens the file): update `last_accessed` to today.
 - On **append**: update `last_accessed` to today.
-- Existing files without timestamps: treat `last_accessed` as `unknown` — do not auto-archive, flag in dream for human review instead.
+- Existing files without timestamps: treat `last_accessed` as `unknown` — silently skip for TTL consideration. Do not flag, do not archive.
 
 ### Definition writes (destination = definition)
 
