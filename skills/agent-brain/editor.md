@@ -119,6 +119,7 @@ When inserting definition references, use `$BRAIN/<para_subpath>` notation. When
 Create or append to a PARA file at `.agent-brain/<agent-name>/<para_subpath>`.
 
 Rules:
+- **Pointers, not copies:** store the source pointer (path / URL / ID + how to fetch), never a copied payload of live data (API responses, dashboard/board rows, metric values). Copies rot; capture the durable insight plus where to re-fetch the current truth.
 - If the file doesn't exist: create it with a clear `#` heading preceded by timestamp headers (see Timestamps below), then the content
 - If it exists: append a new section, don't rewrite existing content; update `last_accessed` timestamp
 - No artificial length limits — write what the content requires, nothing more
@@ -128,19 +129,21 @@ Rules:
 
 ### Timestamps
 
-Every PARA file must begin with two metadata lines before the `#` heading:
+Every PARA file must begin with metadata lines before the `#` heading:
 
 ```markdown
 created: YYYY-MM-DD
 last_accessed: YYYY-MM-DD
+last_reviewed: YYYY-MM-DD   # optional — set only when a human confirms the content
 
 # Heading
 ```
 
-- On **new file**: set both to today's date.
-- On **read** (during dream, improve, or any brain operation that opens the file): update `last_accessed` to today.
-- On **append**: update `last_accessed` to today.
-- Existing files without timestamps: treat `last_accessed` as `unknown` — silently skip for TTL consideration. Do not flag, do not archive.
+- On **new file**: set `created` and `last_accessed` to today. Set `last_reviewed` to today only when the write is human-confirmed (learn, interview, or an approved improve/absorb item).
+- On **read** (during dream, improve, or any brain operation that opens the file): update `last_accessed` to today. **Never** touch `last_reviewed` on a read — it tracks human confirmation, not machine access.
+- On **append**: update `last_accessed` to today; update `last_reviewed` to today only if the appended content was human-confirmed.
+- `last_accessed` drives the machine TTL (dream archival). `last_reviewed` drives human-freshness (validate's stale-content check + dream's review-due surfacing). The two are independent.
+- Existing files without a given timestamp: treat it as `unknown` — silently skip for that check. Do not flag, do not archive. (Backward-compatible: brain-schema stays `v1`; `last_reviewed` is additive and optional.)
 
 ### Definition writes (destination = definition)
 

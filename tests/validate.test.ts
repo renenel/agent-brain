@@ -31,4 +31,16 @@ describe('validate mode', () => {
     const clean = result.stdout.toLowerCase().match(/structurally clean|issues found: 0|no (?:structural )?issues|0 issues|no structural issues detected|no corrections needed/)
     expect(clean, `stdout was:\n${result.stdout.substring(0, 500)}`).not.toBeNull()
   }, 90_000)
+
+  it('check 11: flags a resource whose last_reviewed is stale (>180d) as review-due', async () => {
+    const result = await runSkill('stale-review', '/agent-brain validate')
+    tempDir = result.tempDir
+
+    // It must name the offending file...
+    assertContains(result.stdout, 'old-runbook')
+    // ...and frame it as a review-freshness / staleness issue (not a TTL one).
+    const flagged = result.stdout.toLowerCase().match(/last_reviewed|review-due|review due|stale|180/)
+    expect(flagged, `stdout was:\n${result.stdout.substring(0, 700)}`).not.toBeNull()
+    // ~97s measured for a single run locally; 90s is borderline, so give CI headroom.
+  }, 120_000)
 })
