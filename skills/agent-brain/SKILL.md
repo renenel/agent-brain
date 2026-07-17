@@ -1,9 +1,9 @@
 ---
 name: agent-brain
-description: "Self-improvement system for agents. Invoke when the user runs /agent-brain followed by: improve (learn from this session), learn <something> (teach the agent something new), absorb <path> (adopt capabilities from another agent, skill, or full brain), dream (reflect on the full brain and surface growth opportunities), or validate (audit brain for structural issues)."
+description: "Self-improvement system for agents. Invoke when the user runs /agent-brain followed by: improve (learn from this session), learn <something> (teach the agent something new), interview (proactively interview you to fill knowledge gaps), absorb <path> (adopt capabilities from another agent, skill, or full brain), dream (reflect on the full brain and surface growth opportunities), or validate (audit brain for structural issues)."
 metadata:
   author: renenel
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # agent-brain
@@ -15,6 +15,8 @@ You are the agent-brain orchestration layer. You route, edit, diff, and optional
 > **Do not paste the Persistent Agent Memory boilerplate into your agent's `.md` file.** The harness injects it dynamically at session start with the live MEMORY.md. Baking it in causes a stale-empty duplicate. If you see *"Your MEMORY.md is currently empty"* in your prompt while MEMORY.md has entries, strip the baked-in section from your agent `.md`.
 
 > **When asked to describe the brain layout, paths, routing rules, or PARA semantics, point at `router.md` and `editor.md` as the canonical source — do not redraw the layout in prose, ASCII trees, or invented tables.** If a variant isn't documented here (e.g., user-scope), say so and ask the user, don't invent.
+
+> **Pointers, not copies — and a map, not a library.** Memory stores *pointers* (repo paths, URLs, IDs, how-to-fetch), never copied live data (API responses, dashboard contents, board rows, metric values) — copies go stale and answer with confident wrongness. MEMORY.md is a map you load on demand: one-line entries pointing into PARA; heavy content lives in the PARA file and is read only when the task needs it. Never preload the whole brain.
 
 Read the supporting docs in this directory when you need them:
 - `router.md` — classifies artifacts into destination + PARA bucket + priority
@@ -203,6 +205,7 @@ Audit an existing agent's brain for structural issues without making changes.
 8. **PARA purity** — count flat files at brain root that belong in PARA buckets
 9. **Archives indexed** — flag any MEMORY.md entries pointing into `archives/` as drift (archives are unindexed by design)
 10. **Archives instruction missing** — flag if agent `.md` does not contain the exact string `"archives/ is unindexed"` (agent won't know to scan it at runtime)
+11. **Stale content** — flag `resources/` and `areas/` PARA files whose `last_reviewed` (see editor.md → Timestamps) is older than 180 days as review-due. Files with no `last_reviewed` are treated as `unknown` and silently skipped (backward-compatible). This is human-review freshness — distinct from the `last_accessed` machine-TTL that dream uses for archival.
 
 Report all issues. Validate runs read-only — no changes applied.
 
@@ -230,6 +233,36 @@ If conflict detected: present conflict and ask for resolution before proceeding.
 
 Get approval. Read `editor.md` and apply.
 If CI mode: read `pr.md` and open a PR.
+
+---
+
+## Mode: interview
+
+Triggered by: `/agent-brain interview`
+
+Proactively interview the user to fill gaps in the brain — the complement to `improve` (reactive: mines the session that just happened) and `learn` (captures one thing the user already decided to teach). Use interview when there's time to invest and the goal is to *surface* knowledge the agent doesn't yet know it's missing.
+
+### Step 1 — Find the gaps
+
+Read the agent definition + MEMORY.md + the PARA listing (the index is enough — don't open every file). Identify thin or missing coverage:
+- Areas the agent's role implies but the brain barely covers
+- Recurring task types with no captured method or gotcha
+- Resources referenced by name but never described
+- Systems / people / conventions named once with no pointer
+
+Produce a short ranked list of gap topics — most valuable first.
+
+### Step 2 — Interview (batch, don't drip)
+
+Ask 3–6 questions at once targeting the top gaps. Prefer concrete, answerable questions ("What's the gotcha when you do X?", "Where does Y actually live?") over open prompts. If the session history already answers one, state your assumption for confirmation instead of asking. Stop when the user signals done or the high-value gaps are covered — don't interrogate.
+
+### Step 3 — Route each answer
+
+For each answer, read `router.md` and produce a routing decision. Treat answers as trusted teaching input (like `learn`), but still discard priority-1 noise.
+
+### Step 4 — Present + apply
+
+Read `diff.md`, present grouped changes, get per-item approval, read `editor.md` and apply. Stamp each written file's `last_reviewed` to today (see editor.md → Timestamps) — interview output is human-confirmed by definition. No CI mode — interview is always interactive.
 
 ---
 
@@ -304,7 +337,7 @@ Produce a structured growth report:
 **Strengths** — behaviors repeatedly validated, patterns that are working well
 
 **Stale** — PARA entries that contradict current state, closed projects still in active buckets,
-resources never referenced in any session, memories superseded by newer ones
+resources never referenced in any session, memories superseded by newer ones, or `resources/`/`areas/` files whose `last_reviewed` is > 180 days (review-due — surface for human re-confirmation, don't auto-delete)
 
 **Orphans** — PARA files not referenced from definition or MEMORY.md (must be fixed)
 
