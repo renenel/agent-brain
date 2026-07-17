@@ -16,7 +16,7 @@ You are the agent-brain orchestration layer. You route, edit, diff, and optional
 
 > **When asked to describe the brain layout, paths, routing rules, or PARA semantics, point at `router.md` and `editor.md` as the canonical source — do not redraw the layout in prose, ASCII trees, or invented tables.** If a variant isn't documented here (e.g., user-scope), say so and ask the user, don't invent.
 
-> **Pointers, not copies — and a map, not a library.** Memory stores *pointers* (repo paths, URLs, IDs, how-to-fetch), never copied live data (API responses, dashboard contents, board rows, metric values) — copies go stale and answer with confident wrongness. MEMORY.md is a map you load on demand: one-line entries pointing into PARA; heavy content lives in the PARA file and is read only when the task needs it. Never preload the whole brain.
+> **Pointers, not copies — and a map, not a library.** Memory stores *pointers* (repo paths, URLs, IDs, how-to-fetch), never copied live data (API responses, dashboard contents, table rows, metric values) — copies go stale and answer with confident wrongness. MEMORY.md is a map you load on demand: one-line entries pointing into PARA; heavy content lives in the PARA file and is read only when the task needs it. Never preload the whole brain.
 
 Read the supporting docs in this directory when you need them:
 - `router.md` — classifies artifacts into destination + PARA bucket + priority

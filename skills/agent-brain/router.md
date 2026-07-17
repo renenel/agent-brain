@@ -72,7 +72,7 @@ When the artifact is a request to describe, redraw, or document the brain layout
 
 ### Pointers, not copies
 
-When the artifact is (or embeds) live data — API responses, dashboard contents, monday/HubSpot rows, metric values, query results — do NOT route the copied payload into memory. Route the **pointer**: the source path/URL/ID plus how to fetch it, at priority ≤ 2 (`resources/`). Copied live data goes stale and produces confident-but-wrong answers. If an artifact is mostly a large copied payload with no durable insight, route `discard` and say why. Durable *insight derived from* the data (a pattern, a gotcha, a decision) is worth keeping — the raw copy is not.
+When the artifact is (or embeds) live data — API responses, dashboard contents, table or spreadsheet rows, metric values, query results — do NOT route the copied payload into memory. Route the **pointer**: the source path/URL/ID plus how to fetch it, at priority ≤ 2 (`resources/`). Copied live data goes stale and produces confident-but-wrong answers. If an artifact is mostly a large copied payload with no durable insight, route `discard` and say why. Durable *insight derived from* the data (a pattern, a gotcha, a decision) is worth keeping — the raw copy is not.
 
 ### Conflict detection
 
