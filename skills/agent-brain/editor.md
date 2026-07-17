@@ -119,7 +119,7 @@ When inserting definition references, use `$BRAIN/<para_subpath>` notation. When
 Create or append to a PARA file at `.agent-brain/<agent-name>/<para_subpath>`.
 
 Rules:
-- **Pointers, not copies:** store the source pointer (path / URL / ID + how to fetch), never a copied payload of live data (API responses, dashboard/board rows, metric values). Copies rot; capture the durable insight plus where to re-fetch the current truth.
+- **Pointers, not copies:** store the source pointer (path / URL / ID + how to fetch), never a copied payload of live data (API responses, dashboard or table rows, metric values). Copies rot; capture the durable insight plus where to re-fetch the current truth.
 - If the file doesn't exist: create it with a clear `#` heading preceded by timestamp headers (see Timestamps below), then the content
 - If it exists: append a new section, don't rewrite existing content; update `last_accessed` timestamp
 - No artificial length limits — write what the content requires, nothing more
